@@ -93,8 +93,8 @@ def read_fromPlainText(FileNames, HeaderNames, MinRow, MaxRow,
     return [xs, ys]
 
 def plot_simple(DataX, DataY, Colors, Lines, MinX, MaxX, MinY, MaxY,
-                ScaleX="linear", ScaleY="linear", Labels=[],
-                LabelX="x-axis", LabelY="y-axis",
+                LineWidth=1,  ScaleX="linear", ScaleY="linear",
+                Labels=[], LabelX="x-axis", LabelY="y-axis",
                 Width=5.0, Height=4.5, PlotName="myplot", LegendNumColumns=1):
     if len(Labels) == 0:
         Labels = range(len(PlotStyles))
@@ -102,7 +102,9 @@ def plot_simple(DataX, DataY, Colors, Lines, MinX, MaxX, MinY, MaxY,
     plt.xlim(MinX, MaxX)
     plt.ylim(MinY, MaxY)
     for (x, y, label, color, line) in zip(DataX, DataY, Labels, Colors, Lines):
-        plt.plot(x, y, color=color, linestyle=line, label=label)
+        plt.plot(
+            x, y, color=color, linestyle=line, linewidth=LineWidth, label=label
+        )
     plt.legend(loc='best', ncol=LegendNumColumns)
     if ScaleX == "log":
         plt.xscale(ScaleX)
