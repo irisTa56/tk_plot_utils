@@ -1,13 +1,14 @@
 from setuptools import setup
 
 setup(
-    name="MyPlotUtils",
-    version="0.0.1",
-    description="My　private　utilities for plotting.",
-    author="Takayuki Kobayashi",
-    author_email="iris.takayuki@gmail.com",
-    install_requires=["numpy", "pandas", "matplotlib"],
-    url="https://github.com/irisTa56/MyPlotUtils.git",
-    license=None,
-    py_modules=['my_plot_utils']
+  name="tk_plot_utils",
+  version="0.0.1",
+  description="Personal functions to use Python's plotting libraries more easily",
+  author="Takayuki Kobayashi",
+  author_email="iris.takayuki@gmail.com",
+  url="https://github.com/irisTa56/tk_plot_utils.git",
+  py_modules=['tk_plot_utils'],
+  install_requires=[
+    "plotly"
+  ],
 )
