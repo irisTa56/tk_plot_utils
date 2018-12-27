@@ -8,6 +8,12 @@ Personal functions to use Python's plotting libraries more easily
 
 ## Install
 
+Conda.
+
+```bash
+conda install -c irista56 tk_plot_utils
+```
+
 Clone and install.
 
 ```bash
