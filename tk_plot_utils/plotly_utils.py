@@ -8,17 +8,45 @@ import IPython.display as ipd
 
 from notebook import notebookapp
 
+from bs4 import BeautifulSoup
+
+download_html = """\
+<button onclick="download_image('{image}', {image_height}, {image_width}, '{filename}')">Download Image as {format}</button>
+<script>
+  function download_image(format, height, width, filename)
+  {{
+    var p = document.getElementById('{divid}');
+    window._Plotly.downloadImage(
+      p,
+      {{
+        format: format,
+        height: height,
+        width: width,
+        filename: filename
+      }});
+  }};
+</script>
+"""
+
 class PlotlyPlotter:
   """
-  Class for setting and plotting.
+  Class for setting and plotting via Plotly.
   """
+
+  @staticmethod
+  def init(*args, **kwargs):
+    """
+    Static method of PlotlyPlotter class. Please call this method
+    before creating instances of PlotlyPlotter class.
+    Since this method loads local plotly.min.js (by default),
+    it takes a bit of time and notebook size will increase.
+    """
+    plt.init_notebook_mode(*args, **kwargs)
 
   def __init__(self, *args, **kwargs):
     """
     Initializer of PlotlyPlotter class.
     """
-    plt.init_notebook_mode()
-
     self.init_layout(**kwargs)
 
   def init_layout(self,
@@ -26,7 +54,8 @@ class PlotlyPlotter:
     height=480,
     font_family="Arial",
     font_size=20,
-    tick_length=5):
+    tick_length=5,
+    **kwargs):
     """
     Method to initialize layout dictionary.
     """
@@ -42,6 +71,7 @@ class PlotlyPlotter:
       "ticks": "inside",
       "ticklen": tick_length,
       "mirror": "ticks",
+      "hoverformat": ".f"
     }
 
     minor_tick_axis = {
@@ -101,45 +131,100 @@ class PlotlyPlotter:
 
     return pltgo.FigureWidget({"data": data, "layout": self.layout})
 
-  def show(self, data, **kwargs):
-    """
-    Method to show a plot of the given data.
-    """
-    plt.iplot(self.create_figure(data), **kwargs)
-
-  def save(self, data, **kwargs):
+  def show(self, data, download=True, **kwargs):
     """
     Method to show a plot of the given data.
     """
     auto_kwargs = {
+      "include_plotlyjs": False,
       "show_link": False,
+      "output_type": "div",
+      "image": "svg",
       "image_width": self.layout["width"],
       "image_height": self.layout["height"],
+      "filename": "temp-plot",
     }
 
     for k in list(auto_kwargs.keys()):
       if k in kwargs:
         del auto_kwargs[k]
 
-    path = plt.plot(self.create_figure(data), **auto_kwargs, **kwargs)
-
-    server_list = [
-      server for server in notebookapp.list_running_servers()
-      if server["notebook_dir"] in path
-    ]
-
-    if len(server_list) > 0:
-      if len(server_list) > 1:
-        print("There are multiple candidates:")
-
-      ipd.display(ipd.HTML("</br>".join([
-        """<a href="{0}" target="_blank">{0}</a>""".format(
-          s["url"] + "files" + path.split(s["notebook_dir"], 1)[1])
-        for s in server_list
-      ])))
+    if "output_type" in kwargs and kwargs["output_type"] == "file":
+      path = plt.plot(self.create_figure(data), **auto_kwargs, **kwargs)
+      print("HTML file have been saved to", path)
 
     else:
-      print("Image file has been saved outside Jupyter:", path)
+      div = plt.plot(self.create_figure(data), **auto_kwargs, **kwargs)
+
+      # Jupyter causes "ReferenceError: Plotly is not defined".
+      # This is because Plotly cannot be accessed by `Plotly` in Jpyter.
+      # The following line is a walkaround for this problem.
+      ipd.display(ipd.HTML(div.replace("Plotly.", "window._Plotly.")))
+
+      if download:
+
+        divid = BeautifulSoup(div, "html.parser").find(
+          "div", class_=["plotly-graph-div", "js-plotly-plot"])["id"]
+        parameters = {
+          k: auto_kwargs[k] if k in auto_kwargs else kwargs[k]
+          for k in ["image", "image_height", "image_width", "filename"]
+        }
+
+        ipd.display(ipd.HTML(download_html.format(
+          divid=divid, format=parameters["image"].upper(), **parameters)))
+
+  def set_legend(self, position=None, padding=10, **kwargs):
+    """
+    Method to set layout of the legend. Calling this method with no
+    parameter hides the legend.
+    - `position` should be one of "upper right", "lower right",
+      "upper left", "lower left" and "default".
+    - `padding` is distance (in px) between the legend and frame line
+      of the plot (legend is inside the frame).
+    - `**kwargs` will be added to `plotly.graph_objs.Layout.legend`.
+    """
+    self.layout["legend"] = kwargs
+
+    if position is None:
+      self.layout["showlegend"] = False
+
+    elif not any([k in kwargs for k in ["x", "y", "xanchor", "yanchor"]]):
+
+      xpadding = padding / self.layout["width"] # in normalized coordinates
+      ypadding = padding / self.layout["height"] # in normalized coordinates
+
+      if position == "default":
+        pass
+      elif position == "upper right":
+        self.layout["legend"].update({
+          "x": 1-xpadding,
+          "xanchor": "right",
+          "y": 1-ypadding,
+          "yanchor": "top",
+        })
+      elif position == "lower right":
+        self.layout["legend"].update({
+          "x": 1-xpadding,
+          "xanchor": "right",
+          "y": ypadding,
+          "yanchor": "bottom",
+        })
+      elif position == "upper left":
+        self.layout["legend"].update({
+          "x": xpadding,
+          "xanchor": "left",
+          "y": 1-ypadding,
+          "yanchor": "top",
+        })
+      elif position == "lower left":
+        self.layout["legend"].update({
+          "x": xpadding,
+          "xanchor": "left",
+          "y": ypadding,
+          "yanchor": "bottom",
+        })
+      else:
+        print("Unrecognized position:", position)
 
   def set_title(self, title):
     """

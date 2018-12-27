@@ -9,6 +9,6 @@ setup(
   url="https://github.com/irisTa56/tk_plot_utils.git",
   py_modules=['tk_plot_utils'],
   install_requires=[
-    "plotly"
+    "beautifulsoup4", "plotly"
   ],
 )
