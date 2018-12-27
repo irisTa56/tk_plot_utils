@@ -2,6 +2,10 @@
 
 Personal functions to use Python's plotting libraries more easily
 
+## Prerequisites
+
+* [plotly/plotly.py](https://github.com/plotly/plotly.py)
+
 ## Install
 
 Clone and install.

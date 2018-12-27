@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 version_ns = {}
 with open(os.path.join("tk_plot_utils", "_version.py")) as f:
@@ -13,5 +13,5 @@ setup(
   author="Takayuki Kobayashi",
   author_email="iris.takayuki@gmail.com",
   url="https://github.com/irisTa56/tk_plot_utils.git",
-  py_modules=['tk_plot_utils'],
+  packages=find_packages(),
 )
