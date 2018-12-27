@@ -10,7 +10,7 @@ from notebook import notebookapp
 
 # Jupyter causes "ReferenceError: Plotly is not defined"
 # when downloading an image of the plot. Using `window._Plotly`
-# instead of `Plotly` is a walkaround for this problem.
+# instead of `Plotly` is a workaround for this problem.
 download_html = """\
 <button onclick="download_image('{format}', {height}, {width}, '{filename}')">
   Download Image as <span style="text-transform:uppercase;">{format}</span>
