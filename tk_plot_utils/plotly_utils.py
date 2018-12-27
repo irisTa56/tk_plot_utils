@@ -12,13 +12,13 @@ from notebook import notebookapp
 # when downloading an image of the plot. Using `window._Plotly`
 # instead of `Plotly` is a workaround for this problem.
 download_html = """\
-<button onclick="download_image('{format}', {height}, {width}, '{filename}')">
+<button onclick="download_image("{format}", {height}, {width}, "{filename}")">
   Download Image as <span style="text-transform:uppercase;">{format}</span>
 </button>
 <script>
   function download_image(format, height, width, filename)
   {{
-    var p = document.getElementById('{plot_id}');
+    var p = document.getElementById("{plot_id}");
     window._Plotly.downloadImage(
       p,
       {{
@@ -34,7 +34,7 @@ download_html = """\
 # remove Autoscale button because it dose not work well for minor ticks.
 download_html += """\
 <script>
-  [...document.getElementById('{plot_id}').querySelectorAll("a.modebar-btn")]
+  [...document.getElementById("{plot_id}").querySelectorAll("a.modebar-btn")]
     .forEach((item) =>
       {{
         if (item.getAttribute("data-title") == "Autoscale")
