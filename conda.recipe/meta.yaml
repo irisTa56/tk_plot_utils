@@ -9,10 +9,11 @@ source:
   git_url: ../
 
 requirements:
-  build:
+  host:
     - python
     - setuptools
   run:
+    - python
     - jupyter
     - plotly
 
