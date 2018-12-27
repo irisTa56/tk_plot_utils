@@ -1,6 +1,6 @@
 package:
   name: tk_plot_utils
-  version: 0.0.1
+  version: 0.1.0
 
 build:
   number: 1
@@ -13,13 +13,14 @@ requirements:
     - python
     - setuptools
   run:
-    - python
-    - beautifulsoup4
+    - jupyter
     - plotly
 
 test:
-  imports:
-    - tk_plot_utils
+  requires:
+    - numpy
+  source_files:
+    - examples
 
 about:
   summary: Personal functions to use Python's plotting libraries more easily

@@ -12,7 +12,7 @@ cd tk_plot_utils
 python setup.py install
 ```
 
-Download directly from this repository using pip.
+Download and install from this repository using pip.
 
 ```bash
 pip install git+https://github.com/irisTa56/tk_plot_utils.git
@@ -23,4 +23,3 @@ pip install git+https://github.com/irisTa56/tk_plot_utils.git
 This project would not be possible without the following great open-source projects.
 
 * [plotly/plotly.py](https://github.com/plotly/plotly.py)
-* [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)

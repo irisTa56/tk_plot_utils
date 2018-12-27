@@ -3,14 +3,10 @@ import plotly.graph_objs as pltgo
 
 import plotly.offline.offline as pltoff
 
-import os
-
 import copy as cp
 import IPython.display as ipd
 
 from notebook import notebookapp
-
-from bs4 import BeautifulSoup
 
 # Jupyter causes "ReferenceError: Plotly is not defined"
 # when downloading an image of the plot. Using `window._Plotly`

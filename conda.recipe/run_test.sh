@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd tests
-tar xzvf archive.dumps_bead.tar.gz
-tar xzvf archive.dumps_atom.tar.gz
-python test.py
+for ipynb in $(ls ./examples/*.ipynb)
+do
+  jupyter nbconvert --execute $ipynb
+done
