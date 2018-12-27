@@ -1,6 +1,8 @@
 import plotly.offline as plt
 import plotly.graph_objs as pltgo
 
+import plotly.offline.offline as pltoff
+
 import os
 
 import copy as cp
@@ -10,12 +12,17 @@ from notebook import notebookapp
 
 from bs4 import BeautifulSoup
 
+# Jupyter causes "ReferenceError: Plotly is not defined"
+# when downloading an image of the plot. Using `window._Plotly`
+# instead of `Plotly` is a walkaround for this problem.
 download_html = """\
-<button onclick="download_image('{image}', {image_height}, {image_width}, '{filename}')">Download Image as {format}</button>
+<button onclick="download_image('{format}', {height}, {width}, '{filename}')">
+  Download Image as <span style="text-transform:uppercase;">{format}</span>
+</button>
 <script>
   function download_image(format, height, width, filename)
   {{
-    var p = document.getElementById('{divid}');
+    var p = document.getElementById('{plot_id}');
     window._Plotly.downloadImage(
       p,
       {{
@@ -27,6 +34,21 @@ download_html = """\
   }};
 </script>
 """
+
+get_image_download_script_original = pltoff.get_image_download_script
+
+def get_image_download_script_override(caller):
+  """
+  This function overrides `plotly.offline.offline.get_image_download_script`.
+  """
+  if caller == "plot":
+    return get_image_download_script_original(caller)
+  elif caller != "iplot":
+    raise ValueError("caller should only be one of `iplot` or `plot`")
+
+  return download_html
+
+pltoff.get_image_download_script = get_image_download_script_override
 
 class PlotlyPlotter:
   """
@@ -136,42 +158,18 @@ class PlotlyPlotter:
     Method to show a plot of the given data.
     """
     auto_kwargs = {
-      "include_plotlyjs": False,
       "show_link": False,
-      "output_type": "div",
-      "image": "svg",
+      "image": "svg" if download else None,
       "image_width": self.layout["width"],
       "image_height": self.layout["height"],
-      "filename": "temp-plot",
+      "filename": "plot",
     }
 
     for k in list(auto_kwargs.keys()):
       if k in kwargs:
         del auto_kwargs[k]
 
-    if "output_type" in kwargs and kwargs["output_type"] == "file":
-      path = plt.plot(self.create_figure(data), **auto_kwargs, **kwargs)
-      print("HTML file have been saved to", path)
-
-    else:
-      div = plt.plot(self.create_figure(data), **auto_kwargs, **kwargs)
-
-      # Jupyter causes "ReferenceError: Plotly is not defined".
-      # This is because Plotly cannot be accessed by `Plotly` in Jpyter.
-      # The following line is a walkaround for this problem.
-      ipd.display(ipd.HTML(div.replace("Plotly.", "window._Plotly.")))
-
-      if download:
-
-        divid = BeautifulSoup(div, "html.parser").find(
-          "div", class_=["plotly-graph-div", "js-plotly-plot"])["id"]
-        parameters = {
-          k: auto_kwargs[k] if k in auto_kwargs else kwargs[k]
-          for k in ["image", "image_height", "image_width", "filename"]
-        }
-
-        ipd.display(ipd.HTML(download_html.format(
-          divid=divid, format=parameters["image"].upper(), **parameters)))
+    plt.iplot(self.create_figure(data), **auto_kwargs, **kwargs)
 
   def set_legend(self, position=None, padding=10, **kwargs):
     """

@@ -1,0 +1,26 @@
+package:
+  name: tk_plot_utils
+  version: 0.0.1
+
+build:
+  number: 1
+
+source:
+  git_url: ../
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+    - beautifulsoup4
+    - plotly
+
+test:
+  imports:
+    - tk_plot_utils
+
+about:
+  summary: Personal functions to use Python's plotting libraries more easily
+  license_file: LICENSE
