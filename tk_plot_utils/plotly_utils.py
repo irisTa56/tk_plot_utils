@@ -31,6 +31,20 @@ download_html = """\
 </script>
 """
 
+# remove Autoscale button because it dose not work well for minor ticks.
+download_html += """\
+<script>
+  [...document.getElementById('{plot_id}').querySelectorAll("a.modebar-btn")]
+    .forEach((item) =>
+      {{
+        if (item.getAttribute("data-title") == "Autoscale")
+        {{
+          item.parentNode.removeChild(item);
+        }}
+      }});
+</script>
+"""
+
 get_image_download_script_original = pltoff.get_image_download_script
 
 def get_image_download_script_override(caller):
