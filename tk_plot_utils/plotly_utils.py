@@ -4,6 +4,7 @@ import plotly.graph_objs as pltgo
 import plotly.offline.offline as pltoff
 
 import copy as cp
+import numpy as np
 import IPython.display as ipd
 
 from notebook import notebookapp
@@ -12,7 +13,7 @@ from notebook import notebookapp
 # when downloading an image of the plot. Using `window._Plotly`
 # instead of `Plotly` is a workaround for this problem.
 download_html = """\
-<button onclick="download_image("{format}", {height}, {width}, "{filename}")">
+<button onclick="download_image('{format}', {height}, {width}, '{filename}')">
   Download Image as <span style="text-transform:uppercase;">{format}</span>
 </button>
 <script>
@@ -79,6 +80,7 @@ class PlotlyPlotter:
     """
     Initializer of PlotlyPlotter class.
     """
+    self.object = None
     self.init_layout(**kwargs)
 
   def init_layout(self,
@@ -138,13 +140,16 @@ class PlotlyPlotter:
     self.layout["yaxis2"]["overlaying"] = "y"
     self.layout["yaxis2"]["scaleanchor"] = "y"
 
-  def create_figure(self, data):
+  def figure(self, data, **kwargs):
     """
-    Method to create a `plotly.graph_objs.FigureWidget` instance
-    from the given data and `self.layout`.
+    Method to create a `plotly.graph_objs.Figure` instance
+    from the given data, and assign it to `self.object`.
+    Note that this method returns not the created instance but `self`.
     """
-    if not isinstance(data, list) and not isinstance(data, tuple):
+    if isinstance(data, dict):
       data = [data]
+    elif not isinstance(data, list):
+      raise TypeError("Wrong type of data: {}".format(type(data)))
 
     if not all(["range" in self.layout["xaxis"+s] for s in ["", "2"]]):
       xmin = min([min(d["x"]) for d in data])
@@ -157,16 +162,99 @@ class PlotlyPlotter:
       padding = 0.05 * (ymax - ymin)
       self.set_y_range(ymin-padding, ymax+padding)
 
-    data.append({  # this dummy data is required to show minor ticks
+    data.append({ # this dummy data is required to show minor ticks
       "x": [], "y": [], "xaxis": "x2", "yaxis": "y2", "visible": False,
     })
 
-    return pltgo.FigureWidget({"data": data, "layout": self.layout})
+    self.object = pltgo.FigureWidget({
+      "data": data,
+      "layout": self.layout
+    })
 
-  def show(self, data, download=True, **kwargs):
+    return self
+
+  def heatmap(self, data, **kwargs):
+    """
+    Method to create a `plotly.graph_objs.Heatmap` instance
+    from the given data, and assign it to `self.object`.
+    Note that this method returns not the created instance but `self`.
+
+    Array shape of 'z' should be (*Nx*, *Ny*) where *Nx* and *Ny* is
+    the number of values in the *x* and *y* direction, respectively
+    (This is a transpose of Plotly's default).
+    """
+    if not isinstance(data, dict):
+      raise TypeError("Wrong type of data: {}".format(type(data)))
+
+    if "transpose" not in data:
+      data["transpose"] = True
+
+    nx, ny = np.array(data["z"]).shape
+
+    if not data["transpose"]:
+      nx, ny = ny , nx
+
+    if "origin" in data:
+
+      if "x" in data:
+        print("Value of 'x' will be overwritten")
+      if "y" in data:
+        print("Value of 'y' will be overwritten")
+
+      dx, dy = data["dx"], data["dy"]
+
+      xmin = data["origin"][0]
+      ymin = data["origin"][1]
+      xmax = xmin + nx*dx
+      ymax = ymin + ny*dy
+
+      self.set_x_range(xmin, xmax)
+      self.set_y_range(ymin, ymax)
+
+      data["x"] = xmin + np.arange(nx+1)*dx
+      data["y"] = ymin + np.arange(ny+1)*dy
+
+      del data["origin"]
+
+    # modify layout
+
+    self.layout["xaxis"]["ticks"] = "outside"
+    self.layout["yaxis"]["ticks"] = "outside"
+    self.layout["xaxis2"]["ticks"] = "outside"
+    self.layout["yaxis2"]["ticks"] = "outside"
+
+    self.layout["xaxis"]["constrain"] = "domain"
+    self.layout["yaxis"]["constrain"] = "domain"
+    self.layout["xaxis2"]["constrain"] = "domain"
+    self.layout["yaxis2"]["constrain"] = "domain"
+
+    self.layout["yaxis"]["scaleanchor"] = "x"
+
+    self.object = pltgo.FigureWidget({
+      "data": [
+        pltgo.Heatmap(data),
+        pltgo.Heatmap({ # this dummy data is required to show minor ticks
+          "z": [], "xaxis": "x2", "yaxis": "y2", "visible": False,
+        })],
+      "layout": self.layout
+    })
+
+    return self
+
+  def show(self, data=None, plot="figure", download=True, **kwargs):
     """
     Method to show a plot of the given data.
+    If data have already been assigned to `self.object`,
+    any parameter is not required.
     """
+    if isinstance(data, (dict, list)):
+      if plot == "figure":
+        self.figure(data, **kwargs)
+      elif plot == "heatmap":
+        self.heatmap(data, **kwargs)
+      else:
+        raise ValueError("Unrecognized plot type: {}".format(plot))
+
     auto_kwargs = {
       "show_link": False,
       "image": "svg" if download else None,
@@ -179,7 +267,10 @@ class PlotlyPlotter:
       if k in kwargs:
         del auto_kwargs[k]
 
-    plt.iplot(self.create_figure(data), **auto_kwargs, **kwargs)
+    if self.object is None:
+      raise RuntimeError("Plot object has not been set yet")
+    else:
+      plt.iplot(self.object, **auto_kwargs, **kwargs)
 
   def set_legend(self, position=None, padding=10, **kwargs):
     """
@@ -232,7 +323,7 @@ class PlotlyPlotter:
           "yanchor": "bottom",
         })
       else:
-        print("Unrecognized position:", position)
+        raise ValueError("Unrecognized position: {}".format(position))
 
   def set_title(self, title):
     """

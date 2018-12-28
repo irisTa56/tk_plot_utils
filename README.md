@@ -36,4 +36,6 @@ This project would not be possible without the following great open-source proje
 
 ## To Do
 
+* Beautify functions in table
+* Determine tick interval automatically
 * Documentation
