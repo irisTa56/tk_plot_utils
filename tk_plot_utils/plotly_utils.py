@@ -140,7 +140,7 @@ class PlotlyPlotter:
     self.layout["yaxis2"]["overlaying"] = "y"
     self.layout["yaxis2"]["scaleanchor"] = "y"
 
-  def figure(self, data, **kwargs):
+  def scatter(self, data, **kwargs):
     """
     Method to create a `plotly.graph_objs.Figure` instance
     from the given data, and assign it to `self.object`.
@@ -151,29 +151,41 @@ class PlotlyPlotter:
     elif not isinstance(data, list):
       raise TypeError("Wrong type of data: {}".format(type(data)))
 
-    if not all(["range" in self.layout["xaxis"+s] for s in ["", "2"]]):
+    if "range" not in self.layout["xaxis"]:
       xmin = min([min(d["x"]) for d in data])
       xmax = max([max(d["x"]) for d in data])
       self.set_x_range(xmin, xmax)
 
-    if not all(["range" in self.layout["yaxis"+s] for s in ["", "2"]]):
+    if "range" not in self.layout["yaxis"]:
       ymin = min([min(d["y"]) for d in data])
       ymax = max([max(d["y"]) for d in data])
       padding = 0.05 * (ymax - ymin)
       self.set_y_range(ymin-padding, ymax+padding)
+
+    if "dtick" not in self.layout["xaxis"]:
+      self.set_x_ticks(*self._auto_axis_ticks(self.layout["xaxis"]["range"]))
+
+    if "dtick" not in self.layout["yaxis"]:
+      self.set_y_ticks(*self._auto_axis_ticks(self.layout["yaxis"]["range"]))
 
     data.append({ # this dummy data is required to show minor ticks
       "x": [], "y": [], "xaxis": "x2", "yaxis": "y2", "visible": False,
     })
 
     self.object = pltgo.FigureWidget({
-      "data": data,
+      "data": [pltgo.Scatter(d) for d in data],
       "layout": self.layout
     })
 
     return self
 
-  def heatmap(self, data, **kwargs):
+  def figure(self, data, **kwargs):
+    """
+    Method for backward compatibility.
+    """
+    return self.scatter(data, **kwargs)
+
+  def heatmap(self, data, fix_size=False, **kwargs):
     """
     Method to create a `plotly.graph_objs.Heatmap` instance
     from the given data, and assign it to `self.object`.
@@ -192,9 +204,18 @@ class PlotlyPlotter:
     nx, ny = np.array(data["z"]).shape
 
     if not data["transpose"]:
-      nx, ny = ny , nx
+      nx, ny = ny, nx
+
+    if "x0" in data or "y0" in data:
+      if "x0" in data and "y0" in data:
+        data["origin"] = (data["x0"], data["y0"])
+      else:
+        raise RuntimeError("Both 'x0' and 'y0' are required")
 
     if "origin" in data:
+
+      if "dx" not in data or "dy" not in data:
+        raise RuntimeError("Both 'dx' and 'dy' are required")
 
       if "x" in data:
         print("Value of 'x' will be overwritten")
@@ -211,10 +232,37 @@ class PlotlyPlotter:
       self.set_x_range(xmin, xmax)
       self.set_y_range(ymin, ymax)
 
+      if "dtick" not in self.layout["xaxis"]:
+        self.set_x_ticks(*self._auto_axis_ticks(self.layout["xaxis"]["range"]))
+
+      if "dtick" not in self.layout["yaxis"]:
+        self.set_y_ticks(*self._auto_axis_ticks(self.layout["yaxis"]["range"]))
+
       data["x"] = xmin + np.arange(nx+1)*dx
       data["y"] = ymin + np.arange(ny+1)*dy
 
       del data["origin"]
+
+    elif "x" in data and "y" in data:
+
+      x, y = data["x"], data["y"]
+
+      xmin = x[0] if len(x) == nx+1 else x[0] - 0.5*(x[1]-x[0])
+      ymin = y[0] if len(y) == ny+1 else y[0] - 0.5*(y[1]-y[0])
+      xmax = x[-1] if len(x) == nx+1 else x[-1] + 0.5*(x[-1]-x[-2])
+      ymax = y[-1] if len(y) == ny+1 else y[-1] + 0.5*(y[-1]-y[-2])
+
+      self.set_x_range(xmin, xmax)
+      self.set_y_range(ymin, ymax)
+
+      if "dtick" not in self.layout["xaxis"]:
+        self.set_x_ticks(*self._auto_axis_ticks(self.layout["xaxis"]["range"]))
+
+      if "dtick" not in self.layout["yaxis"]:
+        self.set_y_ticks(*self._auto_axis_ticks(self.layout["yaxis"]["range"]))
+
+    else:
+      raise RuntimeError("Either 'origin' or 'x' and 'y' are required")
 
     # modify layout
 
@@ -230,6 +278,12 @@ class PlotlyPlotter:
 
     self.layout["yaxis"]["scaleanchor"] = "x"
 
+    if not fix_size:
+      if nx > ny:
+        self.layout["width"] = (nx/ny) * self.layout["height"]
+      else:
+        self.layout["height"] = (ny/nx) * self.layout["width"]
+
     self.object = pltgo.FigureWidget({
       "data": [
         pltgo.Heatmap(data),
@@ -241,15 +295,15 @@ class PlotlyPlotter:
 
     return self
 
-  def show(self, data=None, plot="figure", download=True, **kwargs):
+  def show(self, data=None, plot="scatter", download=True, **kwargs):
     """
     Method to show a plot of the given data.
     If data have already been assigned to `self.object`,
     any parameter is not required.
     """
     if isinstance(data, (dict, list)):
-      if plot == "figure":
-        self.figure(data, **kwargs)
+      if plot == "scatter":
+        self.scatter(data, **kwargs)
       elif plot == "heatmap":
         self.heatmap(data, **kwargs)
       else:
@@ -331,21 +385,23 @@ class PlotlyPlotter:
     """
     self.layout["title"] = title
 
-  def set_x_title(self, name, char=None, unit=None):
+  def set_x_title(
+    self, name, char=None, unit=None, unitalicize=["(", ")"]):
     """
     Method to set a string to `self.layout["xaxis"]["title"]`.
     The string is something like `"{name}, <i>{char}</i> [{unit}]"`,
     if `char` and `unit` are provided.
     """
-    self._set_axis_title("x", name, char, unit)
+    self._set_axis_title("x", name, char, unit, unitalicize)
 
-  def set_y_title(self, name, char=None, unit=None):
+  def set_y_title(
+    self, name, char=None, unit=None, unitalicize=["(", ")"]):
     """
     Method to set a string to `self.layout["yaxis"]["title"]`.
     The string is something like `"{name}, <i>{char}</i> [{unit}]"`,
     if `char` and `unit` are provided.
     """
-    self._set_axis_title("y", name, char, unit)
+    self._set_axis_title("y", name, char, unit, unitalicize)
 
   def set_x_ticks(self, interval, num_minor=5):
     """
@@ -377,7 +433,8 @@ class PlotlyPlotter:
 
   # Private Methods
 
-  def _set_axis_title(self, axis, name, char=None, unit=None):
+  def _set_axis_title(
+    self, axis, name, char=None, unit=None, unitalicize=["(", ")"]):
     """
     Method to set a string to `self.layout["*axis"]["title"]`,
     where the wildcard `*` is determined by `axis`.
@@ -389,6 +446,10 @@ class PlotlyPlotter:
     self.layout[key]["title"] = str(name)
 
     if char is not None:
+
+      for c in unitalicize:
+        char = char.replace(c, "</i>{}<i>".format(c))
+
       self.layout[key]["title"] += ", <i>{}</i>".format(char)
 
     if unit is not None:
@@ -404,6 +465,26 @@ class PlotlyPlotter:
 
     self.layout[key]["dtick"] = interval
     self.layout[key+"2"]["dtick"] = interval/num_minor
+
+  def _auto_axis_ticks(self, axis_range):
+    """
+    Method to automatically determine `interval` and `num_minor` for
+    `self._set_axis_ticks`.
+    - `length`: distance from the minimum to maximum of the axis range.
+    """
+    tmpd = (axis_range[1]-axis_range[0])/5
+    log10 = np.log10(tmpd)
+    order = int(log10)
+    scaled = tmpd/(10**order)
+
+    if 7.5 < scaled:
+      return 10**(order+1), 10
+    elif 3.5 < scaled:
+      return 5*10**order, 5
+    elif 1.5 < scaled:
+      return 2*10**order, 2
+    else:
+      return 10**order, 10
 
   def _set_axis_range(self, axis, minimum=None, maximum=None):
     """
