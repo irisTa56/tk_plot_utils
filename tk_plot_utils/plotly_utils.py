@@ -61,6 +61,26 @@ def get_image_download_script_override(caller):
 
 pltoff.get_image_download_script = get_image_download_script_override
 
+def show(self, download=True, **kwargs):
+  """
+  Method to show a plot.
+  """
+  auto_kwargs = {
+    "show_link": False,
+    "image": "svg" if download else None,
+    "image_width": self.layout["width"],
+    "image_height": self.layout["height"],
+    "filename": "plot",
+  }
+
+  for k in list(auto_kwargs.keys()):
+    if k in kwargs:
+      del auto_kwargs[k]
+
+  plt.iplot(self, **auto_kwargs, **kwargs)
+
+pltgo.FigureWidget.show = show
+
 class PlotlyPlotter:
   """
   Class for setting and plotting via Plotly.
@@ -80,7 +100,6 @@ class PlotlyPlotter:
     """
     Initializer of PlotlyPlotter class.
     """
-    self.object = None
     self.init_layout(**kwargs)
 
   def init_layout(self,
@@ -143,8 +162,7 @@ class PlotlyPlotter:
   def scatter(self, data, **kwargs):
     """
     Method to create a `plotly.graph_objs.Figure` instance
-    from the given data, and assign it to `self.object`.
-    Note that this method returns not the created instance but `self`.
+    from the given data.
     """
     if isinstance(data, dict):
       data = [data]
@@ -172,12 +190,10 @@ class PlotlyPlotter:
       "x": [], "y": [], "xaxis": "x2", "yaxis": "y2", "visible": False,
     })
 
-    self.object = pltgo.FigureWidget({
+    return pltgo.FigureWidget({
       "data": [pltgo.Scatter(d) for d in data],
       "layout": self.layout
     })
-
-    return self
 
   def figure(self, data, **kwargs):
     """
@@ -188,8 +204,7 @@ class PlotlyPlotter:
   def heatmap(self, data, fix_size=False, **kwargs):
     """
     Method to create a `plotly.graph_objs.Heatmap` instance
-    from the given data, and assign it to `self.object`.
-    Note that this method returns not the created instance but `self`.
+    from the given data.
 
     Array shape of 'z' should be (*Nx*, *Ny*) where *Nx* and *Ny* is
     the number of values in the *x* and *y* direction, respectively
@@ -284,7 +299,7 @@ class PlotlyPlotter:
       else:
         self.layout["height"] = (ny/nx) * self.layout["width"]
 
-    self.object = pltgo.FigureWidget({
+    return pltgo.FigureWidget({
       "data": [
         pltgo.Heatmap(data),
         pltgo.Heatmap({ # this dummy data is required to show minor ticks
@@ -293,22 +308,10 @@ class PlotlyPlotter:
       "layout": self.layout
     })
 
-    return self
-
-  def show(self, data=None, plot="scatter", download=True, **kwargs):
+  def show(self, data, plot="scatter", download=True, **kwargs):
     """
     Method to show a plot of the given data.
-    If data have already been assigned to `self.object`,
-    any parameter is not required.
     """
-    if isinstance(data, (dict, list)):
-      if plot == "scatter":
-        self.scatter(data, **kwargs)
-      elif plot == "heatmap":
-        self.heatmap(data, **kwargs)
-      else:
-        raise ValueError("Unrecognized plot type: {}".format(plot))
-
     auto_kwargs = {
       "show_link": False,
       "image": "svg" if download else None,
@@ -321,10 +324,12 @@ class PlotlyPlotter:
       if k in kwargs:
         del auto_kwargs[k]
 
-    if self.object is None:
-      raise RuntimeError("Plot object has not been set yet")
+    if plot == "scatter":
+      plt.iplot(self.scatter(data, **kwargs), **auto_kwargs, **kwargs)
+    elif plot == "heatmap":
+      plt.iplot(self.heatmap(data, **kwargs), **auto_kwargs, **kwargs)
     else:
-      plt.iplot(self.object, **auto_kwargs, **kwargs)
+      raise ValueError("Unrecognized plot type: {}".format(plot))
 
   def set_legend(self, position=None, padding=10, **kwargs):
     """
