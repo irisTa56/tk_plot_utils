@@ -1,322 +1,126 @@
-import plotly.offline as plt
-import plotly.graph_objs as pltgo
-
-import plotly.offline.offline as pltoff
-
+import re
 import copy as cp
 import numpy as np
-import IPython.display as ipd
+import collections as coll
 
-from notebook import notebookapp
+from .plotly_override import  plt, pltgo
+from .utility_functions import merged_dict
 
-# Jupyter causes "ReferenceError: Plotly is not defined"
-# when downloading an image of the plot. Using `window._Plotly`
-# instead of `Plotly` is a workaround for this problem.
-download_html = """\
-<button onclick="download_image('{format}', {height}, {width}, '{filename}')">
-  Download Image as <span style="text-transform:uppercase;">{format}</span>
-</button>
-<script>
-  function download_image(format, height, width, filename)
-  {{
-    var p = document.getElementById("{plot_id}");
-    window._Plotly.downloadImage(
-      p,
-      {{
-        format: format,
-        height: height,
-        width: width,
-        filename: filename
-      }});
-  }};
-</script>
-"""
+#-----------------------------------------------------------------------
 
-# remove Autoscale button because it dose not work well for minor ticks.
-download_html += """\
-<script>
-  [...document.getElementById("{plot_id}").querySelectorAll("a.modebar-btn")]
-    .forEach((item) =>
-      {{
-        if (item.getAttribute("data-title") == "Autoscale")
-        {{
-          item.parentNode.removeChild(item);
-        }}
-      }});
-</script>
-"""
-
-get_image_download_script_original = pltoff.get_image_download_script
-
-def get_image_download_script_override(caller):
+class ExtendedFigureWidget(pltgo.FigureWidget):
   """
-  This function overrides `plotly.offline.offline.get_image_download_script`.
+  Class wrapping `plotly.graph_objs.FigureWidget`.
   """
-  if caller == "plot":
-    return get_image_download_script_original(caller)
-  elif caller != "iplot":
-    raise ValueError("caller should only be one of `iplot` or `plot`")
 
-  return download_html
-
-pltoff.get_image_download_script = get_image_download_script_override
-
-def show(self, download=True, **kwargs):
-  """
-  Method to show a plot.
-  """
-  auto_kwargs = {
-    "show_link": False,
-    "image": "svg" if download else None,
-    "image_width": self.layout["width"],
-    "image_height": self.layout["height"],
-    "filename": "plot",
+  default_layout = {
+    "width": 640,
+    "height": 480,
+    "font": {
+      "family": "Arial",
+      "size": 18,
+    },
+    "titlefont": {
+      "family": "Arial",
+      "size": 20,
+    },
   }
 
-  for k in list(auto_kwargs.keys()):
-    if k in kwargs:
-      del auto_kwargs[k]
+  axis_default_layout = {
+    "titlefont": {
+      "family": "Arial",
+      "size": 20,
+    },
+    "zeroline": False,
+    "showgrid": False,
+    "showline": True,
+    "showticklabels": True,
+    "ticks": "inside",
+    "ticklen": 5,
+    "mirror": "ticks",
+    "hoverformat": ".f"
+  }
 
-  plt.iplot(self, **auto_kwargs, **kwargs)
+  minor_axis_default_layout = {
+    "zeroline": False,
+    "showgrid": False,
+    "showline": False,
+    "showticklabels": False,
+    "ticks": "inside",
+    "ticklen": 3,
+    "mirror": "ticks",
+  }
 
-pltgo.FigureWidget.show = show
-
-class PlotlyPlotter:
-  """
-  Class for setting and plotting via Plotly.
-  """
-
-  @staticmethod
-  def init(*args, **kwargs):
-    """
-    Static method of PlotlyPlotter class. Please call this method
-    before creating instances of PlotlyPlotter class.
-    Since this method loads local plotly.min.js (by default),
-    it takes a bit of time and notebook size will increase.
-    """
-    plt.init_notebook_mode(*args, **kwargs)
+  unitalicize=["(", ")", "sin", "cos", "tan", "exp", "log"]
 
   def __init__(self, *args, **kwargs):
     """
-    Initializer of PlotlyPlotter class.
+    Initializer of ExtendedFigureWidget class.
     """
-    self.init_layout(**kwargs)
+    super().__init__(*args, **kwargs)
 
-  def init_layout(self,
-    width=640,
-    height=480,
-    font_family="Arial",
-    font_size=20,
-    tick_length=5,
-    **kwargs):
-    """
-    Method to initialize layout dictionary.
-    """
-    axis = {
-      "titlefont": {
-        "family": font_family,
-        "size": font_size,
-      },
-      "zeroline": False,
-      "showgrid": False,
-      "showline": True,
-      "showticklabels": True,
-      "ticks": "inside",
-      "ticklen": tick_length,
-      "mirror": "ticks",
-      "hoverformat": ".f"
-    }
-
-    minor_tick_axis = {
-      "zeroline": False,
-      "showgrid": False,
-      "showline": False,
-      "showticklabels": False,
-      "ticks": "inside",
-      "ticklen": tick_length*0.6,
-      "mirror": "ticks",
-    }
-
-    self.layout = {
-      "width": width,
-      "height": height,
-      "font": {
-        "family": font_family,
-        "size": font_size*0.9,
-      },
-      "titlefont": {
-        "family": font_family,
-        "size": font_size,
-      },
-      "xaxis": cp.deepcopy(axis),
-      "xaxis2": cp.deepcopy(minor_tick_axis),
-      "yaxis": cp.deepcopy(axis),
-      "yaxis2": cp.deepcopy(minor_tick_axis),
-    }
-
-    self.layout["xaxis2"]["overlaying"] = "x"
-    self.layout["xaxis2"]["scaleanchor"] = "x"
-    self.layout["yaxis2"]["overlaying"] = "y"
-    self.layout["yaxis2"]["scaleanchor"] = "y"
+    self._init_layout(self._layout)
+    self._init_axis(self._layout)
 
   def scatter(self, data, **kwargs):
     """
-    Method to create a `plotly.graph_objs.Figure` instance
-    from the given data.
+    Method to create `plotly.graph_objs.Scatter` instance(s) from `dict`
+    (`list`/`tuple` of `dict`) and add it (them) to this instance.
     """
-    if isinstance(data, dict):
-      data = [data]
-    elif not isinstance(data, list):
-      raise TypeError("Wrong type of data: {}".format(type(data)))
+    self.data = tuple()
+    return self.append_scatter(data, **kwargs)
 
-    if "range" not in self.layout["xaxis"]:
-      xmin = min([min(d["x"]) for d in data])
-      xmax = max([max(d["x"]) for d in data])
-      self.set_x_range(xmin, xmax)
-
-    if "range" not in self.layout["yaxis"]:
-      ymin = min([min(d["y"]) for d in data])
-      ymax = max([max(d["y"]) for d in data])
-      padding = 0.05 * (ymax - ymin)
-      self.set_y_range(ymin-padding, ymax+padding)
-
-    if "dtick" not in self.layout["xaxis"]:
-      self.set_x_ticks(*self._auto_axis_ticks(self.layout["xaxis"]["range"]))
-
-    if "dtick" not in self.layout["yaxis"]:
-      self.set_y_ticks(*self._auto_axis_ticks(self.layout["yaxis"]["range"]))
-
-    data.append({ # this dummy data is required to show minor ticks
-      "x": [], "y": [], "xaxis": "x2", "yaxis": "y2", "visible": False,
-    })
-
-    return pltgo.FigureWidget({
-      "data": [pltgo.Scatter(d) for d in data],
-      "layout": self.layout
-    })
-
-  def figure(self, data, **kwargs):
+  def append_scatter(self, data, **kwargs):
     """
-    Method for backward compatibility.
+    Method to create `plotly.graph_objs.Scatter` instance(s) from `dict`
+    (`list`/`tuple` of `dict`) and add it (them) to this instance.
     """
-    return self.scatter(data, **kwargs)
+    self._scatter(data, **kwargs)
+    return self
 
-  def heatmap(self, data, fix_size=False, **kwargs):
+  def heatmap(self, data, **kwargs):
     """
-    Method to create a `plotly.graph_objs.Heatmap` instance
-    from the given data.
-
-    Array shape of 'z' should be (*Nx*, *Ny*) where *Nx* and *Ny* is
-    the number of values in the *x* and *y* direction, respectively
-    (This is a transpose of Plotly's default).
+    Method to create `plotly.graph_objs.Heatmap` instance(s) from `dict`
+    (`list`/`tuple` of `dict`) and add it (them) to this instance.
     """
-    if not isinstance(data, dict):
-      raise TypeError("Wrong type of data: {}".format(type(data)))
+    self.data = tuple()
+    return self.append_heatmap(data, **kwargs)
 
-    if "transpose" not in data:
-      data["transpose"] = True
+  def append_heatmap(self, data, **kwargs):
+    """
+    Method to create `plotly.graph_objs.Heatmap` instance(s) from `dict`
+    (`list`/`tuple` of `dict`) and add it (them) to this instance.
+    """
+    self._heatmap(data, **kwargs)
+    return self
 
-    nx, ny = np.array(data["z"]).shape
-
-    if not data["transpose"]:
-      nx, ny = ny, nx
-
-    if "x0" in data or "y0" in data:
-      if "x0" in data and "y0" in data:
-        data["origin"] = (data["x0"], data["y0"])
+  def show(self, data=None, plot="scatter", download=True, **kwargs):
+    """
+    Method to show a plot of data contained in this instance.
+    """
+    if data is not None:
+      if plot == "scatter":
+        self._scatter(data, **kwargs)
+      elif plot == "heatmap":
+        self._heatmap(data, **kwargs)
       else:
-        raise RuntimeError("Both 'x0' and 'y0' are required")
+        raise ValueError("Unrecognized plot type: {}".format(plot))
 
-    if "origin" in data:
+    dct = coll.defaultdict(list)
 
-      if "dx" not in data or "dy" not in data:
-        raise RuntimeError("Both 'dx' and 'dy' are required")
+    for i, d in enumerate(self._data):
+      dct[d["type"]].append(self.data[i])
 
-      if "x" in data:
-        print("Value of 'x' will be overwritten")
-      if "y" in data:
-        print("Value of 'y' will be overwritten")
+    self._format_scatter(dct["scatter"])
+    self._format_scatter(dct["heatmap"])
 
-      dx, dy = data["dx"], data["dy"]
+    # plotting
 
-      xmin = data["origin"][0]
-      ymin = data["origin"][1]
-      xmax = xmin + nx*dx
-      ymax = ymin + ny*dy
-
-      self.set_x_range(xmin, xmax)
-      self.set_y_range(ymin, ymax)
-
-      if "dtick" not in self.layout["xaxis"]:
-        self.set_x_ticks(*self._auto_axis_ticks(self.layout["xaxis"]["range"]))
-
-      if "dtick" not in self.layout["yaxis"]:
-        self.set_y_ticks(*self._auto_axis_ticks(self.layout["yaxis"]["range"]))
-
-      data["x"] = xmin + np.arange(nx+1)*dx
-      data["y"] = ymin + np.arange(ny+1)*dy
-
-      del data["origin"]
-
-    elif "x" in data and "y" in data:
-
-      x, y = data["x"], data["y"]
-
-      xmin = x[0] if len(x) == nx+1 else x[0] - 0.5*(x[1]-x[0])
-      ymin = y[0] if len(y) == ny+1 else y[0] - 0.5*(y[1]-y[0])
-      xmax = x[-1] if len(x) == nx+1 else x[-1] + 0.5*(x[-1]-x[-2])
-      ymax = y[-1] if len(y) == ny+1 else y[-1] + 0.5*(y[-1]-y[-2])
-
-      self.set_x_range(xmin, xmax)
-      self.set_y_range(ymin, ymax)
-
-      if "dtick" not in self.layout["xaxis"]:
-        self.set_x_ticks(*self._auto_axis_ticks(self.layout["xaxis"]["range"]))
-
-      if "dtick" not in self.layout["yaxis"]:
-        self.set_y_ticks(*self._auto_axis_ticks(self.layout["yaxis"]["range"]))
-
-    else:
-      raise RuntimeError("Either 'origin' or 'x' and 'y' are required")
-
-    # modify layout
-
-    self.layout["xaxis"]["ticks"] = "outside"
-    self.layout["yaxis"]["ticks"] = "outside"
-    self.layout["xaxis2"]["ticks"] = "outside"
-    self.layout["yaxis2"]["ticks"] = "outside"
-
-    self.layout["xaxis"]["constrain"] = "domain"
-    self.layout["yaxis"]["constrain"] = "domain"
-    self.layout["xaxis2"]["constrain"] = "domain"
-    self.layout["yaxis2"]["constrain"] = "domain"
-
-    self.layout["yaxis"]["scaleanchor"] = "x"
-
-    if not fix_size:
-      if nx > ny:
-        self.layout["width"] = (nx/ny) * self.layout["height"]
-      else:
-        self.layout["height"] = (ny/nx) * self.layout["width"]
-
-    return pltgo.FigureWidget({
-      "data": [
-        pltgo.Heatmap(data),
-        pltgo.Heatmap({ # this dummy data is required to show minor ticks
-          "z": [], "xaxis": "x2", "yaxis": "y2", "visible": False,
-        })],
-      "layout": self.layout
-    })
-
-  def show(self, data, plot="scatter", download=True, **kwargs):
-    """
-    Method to show a plot of the given data.
-    """
     auto_kwargs = {
       "show_link": False,
       "image": "svg" if download else None,
-      "image_width": self.layout["width"],
-      "image_height": self.layout["height"],
+      "image_width": self._layout["width"],
+      "image_height": self._layout["height"],
       "filename": "plot",
     }
 
@@ -324,12 +128,7 @@ class PlotlyPlotter:
       if k in kwargs:
         del auto_kwargs[k]
 
-    if plot == "scatter":
-      plt.iplot(self.scatter(data, **kwargs), **auto_kwargs, **kwargs)
-    elif plot == "heatmap":
-      plt.iplot(self.heatmap(data, **kwargs), **auto_kwargs, **kwargs)
-    else:
-      raise ValueError("Unrecognized plot type: {}".format(plot))
+    plt.iplot(self, **auto_kwargs, **kwargs)
 
   def set_legend(self, position=None, padding=10, **kwargs):
     """
@@ -341,41 +140,41 @@ class PlotlyPlotter:
       of the plot (legend is inside the frame).
     - `**kwargs` will be added to `plotly.graph_objs.Layout.legend`.
     """
-    self.layout["legend"] = kwargs
+    self._layout["legend"] = kwargs
 
     if position is None:
-      self.layout["showlegend"] = False
+      self._layout["showlegend"] = False
 
     elif not any([k in kwargs for k in ["x", "y", "xanchor", "yanchor"]]):
 
-      xpadding = padding / self.layout["width"] # in normalized coordinates
-      ypadding = padding / self.layout["height"] # in normalized coordinates
+      xpadding = padding / self._layout["width"] # in normalized coordinates
+      ypadding = padding / self._layout["height"] # in normalized coordinates
 
       if position == "default":
         pass
       elif position == "upper right":
-        self.layout["legend"].update({
+        self._layout["legend"].update({
           "x": 1-xpadding,
           "xanchor": "right",
           "y": 1-ypadding,
           "yanchor": "top",
         })
       elif position == "lower right":
-        self.layout["legend"].update({
+        self._layout["legend"].update({
           "x": 1-xpadding,
           "xanchor": "right",
           "y": ypadding,
           "yanchor": "bottom",
         })
       elif position == "upper left":
-        self.layout["legend"].update({
+        self._layout["legend"].update({
           "x": xpadding,
           "xanchor": "left",
           "y": 1-ypadding,
           "yanchor": "top",
         })
       elif position == "lower left":
-        self.layout["legend"].update({
+        self._layout["legend"].update({
           "x": xpadding,
           "xanchor": "left",
           "y": ypadding,
@@ -386,90 +185,163 @@ class PlotlyPlotter:
 
   def set_title(self, title):
     """
-    Method to set a string to `self.layout["title"]`.
+    Method to set a string to `self._layout["title"]`.
     """
-    self.layout["title"] = title
+    self._layout["title"] = title
 
-  def set_x_title(
-    self, name, char=None, unit=None, unitalicize=["(", ")"]):
+  def set_axis_title(
+    self, axis, name, char=None, unit=None):
     """
-    Method to set a string to `self.layout["xaxis"]["title"]`.
-    The string is something like `"{name}, <i>{char}</i> [{unit}]"`,
-    if `char` and `unit` are provided.
-    """
-    self._set_axis_title("x", name, char, unit, unitalicize)
-
-  def set_y_title(
-    self, name, char=None, unit=None, unitalicize=["(", ")"]):
-    """
-    Method to set a string to `self.layout["yaxis"]["title"]`.
-    The string is something like `"{name}, <i>{char}</i> [{unit}]"`,
-    if `char` and `unit` are provided.
-    """
-    self._set_axis_title("y", name, char, unit, unitalicize)
-
-  def set_x_ticks(self, interval, num_minor=5):
-    """
-    Method to set ticks of x axis.
-    - `interval`: distance between two consecutive major ticks.
-    - `num_minor`: # of minor ticks per major tick.
-    """
-    self._set_axis_ticks("x", interval, num_minor)
-
-  def set_y_ticks(self, interval, num_minor=5):
-    """
-    Method to set ticks of y axis.
-    - `interval`: distance between two consecutive major ticks.
-    - `num_minor`: # of minor ticks per major tick.
-    """
-    self._set_axis_ticks("y", interval, num_minor)
-
-  def set_x_range(self, minimum=None, maximum=None):
-    """
-    Method to set range of the x axis.
-    """
-    self._set_axis_range("x", minimum, maximum)
-
-  def set_y_range(self, minimum=None, maximum=None):
-    """
-    Method to set range of the y axis.
-    """
-    self._set_axis_range("y", minimum, maximum)
-
-  # Private Methods
-
-  def _set_axis_title(
-    self, axis, name, char=None, unit=None, unitalicize=["(", ")"]):
-    """
-    Method to set a string to `self.layout["*axis"]["title"]`,
+    Method to set a string to `self._layout["*axis*"]["title"]`,
     where the wildcard `*` is determined by `axis`.
     The string is something like `"{name}, <i>{char}</i> [{unit}]"`,
     if `char` and `unit` are provided.
     """
-    key = "{}axis".format(axis)
+    if axis not in self._axis:
+      self._create_axis(axis)
 
-    self.layout[key]["title"] = str(name)
+    title = str(name)
 
     if char is not None:
 
-      for c in unitalicize:
+      for c in type(self).unitalicize:  # `1 < len(c)` is OK.
         char = char.replace(c, "</i>{}<i>".format(c))
 
-      self.layout[key]["title"] += ", <i>{}</i>".format(char)
+      title += ", <i>{}</i>".format(char)
 
     if unit is not None:
-      self.layout[key]["title"] += " [{}]".format(unit)
+      title += " [{}]".format(unit)
 
-  def _set_axis_ticks(self, axis, interval, num_minor=5):
+    self._axis[axis].layout["title"] = title
+
+  def set_axis_range(self, axis, minimum=None, maximum=None):
+    """
+    Method to set range of an axis.
+    """
+    if axis not in self._axis:
+      self._create_axis(axis)
+
+    if minimum is None or maximum is None:
+      del self._axis[axis].layout["range"]
+      del self._axis[axis].minor_layout["range"]
+    else:
+      self._axis[axis].layout["range"] = [minimum, maximum]
+      self._axis[axis].minor_layout["range"] = [minimum, maximum]
+
+  def set_axis_ticks(self, axis, interval, num_minor=5):
     """
     Method to set ticks.
     - `interval`: distance between two consecutive major ticks.
     - `num_minor`: # of minor ticks per major tick.
     """
-    key = "{}axis".format(axis)
+    if axis not in self._axis:
+      self._create_axis(axis)
 
-    self.layout[key]["dtick"] = interval
-    self.layout[key+"2"]["dtick"] = interval/num_minor
+    self._axis[axis].layout["dtick"] = interval
+    self._axis[axis].minor_layout["dtick"] = interval/num_minor
+
+  # Private Methods ----------------------------------------------------
+
+  def _init_layout(self, _layout):
+    """
+    Method to initialize the layout by merging *static* `default_layout`
+    and *super* `self._layout`.
+    """
+    self._layout = merged_dict(type(self).default_layout, _layout)
+
+  def _init_axis(self, _layout):
+    """
+    Method to initialize settings for axis.
+    """
+    self._axis = {}
+
+    for k in _layout.keys():
+      if re.search("^[xyz]axis\d*", k):
+        self._create_axis(k.replace("axis", ""))
+
+  def _create_axis(self, axis):
+    """
+    Method to create an instance of AxisWithMinorTick.
+    """
+    self._axis[axis] = AxisWithMinorTick(axis, self)
+
+  def _scatter(self, data, **kwargs):
+    """
+    Method to create `plotly.graph_objs.Scatter` instance(s) from `dict`
+    (`list`/`tuple` of `dict`) and add it (them) to this instance.
+    """
+    if isinstance(data, dict):
+      data = [data]
+    elif not isinstance(data, (list, tuple)):
+      raise TypeError("Wrong type of data: {}".format(type(data)))
+
+    for d in data:
+      self.add_scatter()
+      self.data[-1].update(d)
+
+  def _format_scatter(self, scatters):
+    """
+    Method to format *Scatter* plots.
+    """
+    # create all axis & categorize scatters by their axis
+
+    dct = coll.defaultdict(list)
+
+    for scatter in scatters:
+      xaxis = scatter.xaxis if scatter.xaxis else "x"
+      yaxis = scatter.yaxis if scatter.yaxis else "y"
+
+      if xaxis not in self._axis:
+        self._create_axis(xaxis)
+      if yaxis not in self._axis:
+        self._create_axis(yaxis)
+
+      dct[xaxis].append(scatter)
+      dct[yaxis].append(scatter)
+
+    # setting for each axis
+
+    for axis, scatters in dct.items():
+
+      if "range" not in self._axis[axis].layout:
+        minimum = min(min(s[axis[0]]) for s in scatters)
+        maximum = max(max(s[axis[0]]) for s in scatters)
+        padding = 0 if axis[0] == "x" else 0.05 * (maximum - minimum)
+        self.set_axis_range(axis, minimum-padding, maximum+padding)
+
+      if "dtick" not in self._axis[axis].layout:
+        self.set_axis_ticks(
+          axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
+
+    # add dummy data to show minor ticks
+
+    for axis in self._axis.values():
+      if axis.minor_name not in dct:
+        self.add_scatter()
+        self.data[-1].update({
+          "visible": False,
+          "{}axis".format(axis.minor_name[0]): axis.minor_name,
+        })
+
+  def _heatmap(self, data, **kwargs):
+    """
+    Method to create `plotly.graph_objs.Heatmap` instance(s) from `dict`
+    (`list`/`tuple` of `dict`) and add it (them) to this instance.
+    """
+    if isinstance(data, dict):
+      data = [data]
+    elif not isinstance(data, (list, tuple)):
+      raise TypeError("Wrong type of data: {}".format(type(data)))
+
+    for d in data:
+      self.add_heatmap()
+      self.data[-1].update(d)
+
+  def _format_heatmap(self, heatmaps):
+    """
+    Method to format *Heatmap* plots.
+    """
+    pass
 
   def _auto_axis_ticks(self, axis_range):
     """
@@ -491,15 +363,37 @@ class PlotlyPlotter:
     else:
       return 10**order, 10
 
-  def _set_axis_range(self, axis, minimum=None, maximum=None):
-    """
-    Method to set range of an axis.
-    """
-    key = "{}axis".format(axis)
+#-----------------------------------------------------------------------
 
-    if minimum is None or maximum is None:
-      del self.layout[key]["range"]
-      del  self.layout[key+"2"]["range"]
-    else:
-      self.layout[key]["range"] = [minimum, maximum]
-      self.layout[key+"2"]["range"] = [minimum, maximum]
+class AxisWithMinorTick:
+
+  def __init__(self, axis, parent, *args, **kwargs):
+    """
+    Initializer of AxisWithMinorTick class.
+    """
+    self.name = axis
+    self.direc = axis[0]
+    self.index = int(axis[1:]) if 1 < len(axis) else 0
+    self.minor_index = 100 + self.index  # for minor ticks
+
+    self.minor_name = "{}{}".format(self.direc, self.minor_index)
+
+    layout_key = "{}axis{}".format(
+      self.direc, self.index if 0 < self.index else "")
+    minor_layout_key = "{}axis{}".format(self.direc, self.minor_index)
+
+    self.layout = parent._layout[layout_key] = merged_dict(
+      type(parent).axis_default_layout,
+      parent._layout[layout_key]
+      if layout_key in parent._layout else {})
+
+    self.minor_layout = parent._layout[minor_layout_key] = merged_dict(
+      type(parent).minor_axis_default_layout,
+      parent._layout[minor_layout_key]
+      if minor_layout_key in parent._layout else {})
+
+    self.minor_layout["overlaying"] = self.name
+    self.minor_layout["scaleanchor"] = self.name
+
+  def __repr__(self):
+    return self.name
