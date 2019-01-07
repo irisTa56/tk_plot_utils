@@ -3,10 +3,38 @@ import copy as cp
 import numpy as np
 import collections as coll
 
+from plotly import tools
+
 from .plotly_override import  plt, pltgo
 from .utility_functions import merged_dict
 
-#-----------------------------------------------------------------------
+#=======================================================================
+
+def make_subplots(scale=1.0, *args, **kwargs):
+  """
+  Static method to interface with `plotly.tools.make_subplots`.
+  """
+  if 0 < len(args):
+    rows = args[0]
+  if 1 < len(args):
+    cols = args[1]
+  if "rows" in kwargs:
+    rows = kwargs["rows"]
+  if "cols" in kwargs:
+    cols = kwargs["cols"]
+
+  tmp = ExtendedFigureWidget(tools.make_subplots(*args, **kwargs))
+
+  #tmp._layout["width"] *= scale*cols
+  #tmp._layout["height"] *= scale*rows
+
+  if "annotations" in tmp._layout:
+    for annotation in tmp._layout["annotations"]:
+      annotation["font"] = cp.deepcopy(tmp._layout["titlefont"])
+
+  return tmp
+
+#=======================================================================
 
 class ExtendedFigureWidget(pltgo.FigureWidget):
   """
@@ -26,31 +54,6 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     },
   }
 
-  axis_default_layout = {
-    "titlefont": {
-      "family": "Arial",
-      "size": 20,
-    },
-    "zeroline": False,
-    "showgrid": False,
-    "showline": True,
-    "showticklabels": True,
-    "ticks": "inside",
-    "ticklen": 5,
-    "mirror": "ticks",
-    "hoverformat": ".f"
-  }
-
-  minor_axis_default_layout = {
-    "zeroline": False,
-    "showgrid": False,
-    "showline": False,
-    "showticklabels": False,
-    "ticks": "inside",
-    "ticklen": 3,
-    "mirror": "ticks",
-  }
-
   unitalicize=["(", ")", "sin", "cos", "tan", "exp", "log"]
 
   def __init__(self, *args, **kwargs):
@@ -59,8 +62,18 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     super().__init__(*args, **kwargs)
 
-    self._init_layout(self._layout)
-    self._init_axis(self._layout)
+    self._init_layout(cp.deepcopy(self._layout))
+    self._init_axis(cp.deepcopy(self._layout))
+
+    self._dummy_uids = []
+
+  def assign_subplot(self, figure, *args, **kwargs):
+    """
+    Method to assign traces contained in `figure` to a specified subplot
+    using `plotly.graph_objs.FigureWidget.append_trace`.
+    """
+    for trace in figure.data:
+      self.append_trace(trace, *args, **kwargs)
 
   def scatter(self, data, **kwargs):
     """
@@ -131,6 +144,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         del auto_kwargs[k]
 
     plt.iplot(self, **auto_kwargs, **kwargs)
+
+    self._clear_dummy_traces()
 
   def set_legend(self, position=None, padding=10, **kwargs):
     """
@@ -265,7 +280,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to create an instance of AxisWithMinorTick.
     """
-    self._axis[axis] = AxisWithMinorTick(axis, self)
+    self._axis[axis] = AxisWithMinorTick(axis, self._layout)
 
   def _scatter(self, data, **kwargs):
     """
@@ -319,13 +334,14 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
       # add dummy data to show minor ticks
 
-      self.add_scatter()
-      self.data[-1].update({
+      dummy = self.add_scatter()
+      dummy.update({
         "visible": False, **{
           "{}axis".format(name[0]): name
           for name in [self._axis[axis].minor_name for axis in axis_pair]
         }
       })
+      self._dummy_uids.append(dummy["uid"])
 
   def _heatmap(self, data, **kwargs):
     """
@@ -429,13 +445,14 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
       # add dummy data to show minor ticks
 
-      self.add_heatmap()
-      self.data[-1].update({
+      dummy = self.add_heatmap()
+      dummy.update({
         "visible": False, **{
           "{}axis".format(name[0]): name
           for name in [self._axis[axis].minor_name for axis in axis_pair]
         }
       })
+      self._dummy_uids.append(dummy["uid"])
 
       # change plot size if the heatmap is single
 
@@ -444,6 +461,18 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           self._layout["width"] = (nx/ny) * self._layout["height"]
         else:
           self._layout["height"] = (ny/nx) * self._layout["width"]
+
+  def _clear_dummy_traces(self):
+    """
+    Method to delete all trances of which 'uid' is in `self._dummy_uids`.
+    """
+    while self._dummy_uids:
+      uid = self._dummy_uids.pop()
+      try:
+        idx = [i for i, t in enumerate(self.data) if t.uid == uid][0]
+        self.data = self.data[:idx] + self.data[idx+1:]
+      except IndexError:
+        raise RuntimeError("Dummy trace might be deleted accidentally")
 
   def _auto_axis_ticks(self, axis_range):
     """
@@ -465,35 +494,61 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       return 10**order, 10
 
-#-----------------------------------------------------------------------
+#=======================================================================
 
 class AxisWithMinorTick:
 
-  def __init__(self, axis, parent, *args, **kwargs):
+  default_layout = {
+    "titlefont": {
+      "family": "Arial",
+      "size": 20,
+    },
+    "zeroline": False,
+    "showgrid": False,
+    "showline": True,
+    "showticklabels": True,
+    "ticks": "inside",
+    "ticklen": 5,
+    "mirror": "ticks",
+    "hoverformat": ".f"
+  }
+
+  minor_default_layout = {
+    "zeroline": False,
+    "showgrid": False,
+    "showline": False,
+    "showticklabels": False,
+    "ticks": "inside",
+    "ticklen": 3,
+    "mirror": "ticks",
+  }
+
+  opposite = {"x": "y", "y": "x"}
+
+  def __init__(self, axis, parent_layout, *args, **kwargs):
     """
     Initializer of AxisWithMinorTick class.
     """
     self.name = axis
-    self.direc = axis[0]
-    self.index = int(axis[1:]) if 1 < len(axis) else 0
-    self.minor_index = 100 + self.index  # for minor ticks
 
-    self.minor_name = "{}{}".format(self.direc, self.minor_index)
+    direc = axis[0]
+    index = int(axis[1:]) if 1 < len(axis) else 1
+    minor_index = 100 + index  # for minor ticks
 
-    layout_key = "{}axis{}".format(
-      self.direc, self.index if 0 < self.index else "")
-    minor_layout_key = "{}axis{}".format(self.direc, self.minor_index)
+    self.minor_name = "{}{}".format(direc, minor_index)
 
-    self.layout = parent._layout[layout_key] = merged_dict(
-      type(parent).axis_default_layout,
-      parent._layout[layout_key]
-      if layout_key in parent._layout else {})
+    layout_key = "{}axis{}".format(direc, index if 1 < index else "")
+    minor_layout_key = "{}axis{}".format(direc, minor_index)
 
-    self.minor_layout = parent._layout[minor_layout_key] = merged_dict(
-      type(parent).minor_axis_default_layout,
-      parent._layout[minor_layout_key]
-      if minor_layout_key in parent._layout else {})
+    self.layout = parent_layout[layout_key] = merged_dict(
+      type(self).default_layout, parent_layout[layout_key]
+      if layout_key in parent_layout else {})
 
+    self.minor_layout = parent_layout[minor_layout_key] = merged_dict(
+      type(self).minor_default_layout, parent_layout[minor_layout_key]
+      if minor_layout_key in parent_layout else {})
+
+    self.minor_layout["anchor"] = type(self).opposite[direc] + self.name[1:]
     self.minor_layout["overlaying"] = self.name
     self.minor_layout["scaleanchor"] = self.name
 
