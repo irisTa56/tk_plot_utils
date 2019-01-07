@@ -111,8 +111,10 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     for i, d in enumerate(self._data):
       dct[d["type"]].append(self.data[i])
 
-    self._format_scatter(dct["scatter"])
-    self._format_scatter(dct["heatmap"])
+    if "scatter" in dct:
+      self._layout_scatter(dct["scatter"], **kwargs)
+    if "heatmap" in dct:
+      self._layout_heatmap(dct["heatmap"], **kwargs)
 
     # plotting
 
@@ -279,7 +281,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       self.add_scatter()
       self.data[-1].update(d)
 
-  def _format_scatter(self, scatters):
+  def _layout_scatter(self, scatters, **kwargs):
     """
     Method to format *Scatter* plots.
     """
@@ -288,40 +290,42 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     dct = coll.defaultdict(list)
 
     for scatter in scatters:
-      xaxis = scatter.xaxis if scatter.xaxis else "x"
-      yaxis = scatter.yaxis if scatter.yaxis else "y"
 
-      if xaxis not in self._axis:
-        self._create_axis(xaxis)
-      if yaxis not in self._axis:
-        self._create_axis(yaxis)
+      axis_pair = (
+        scatter.xaxis if scatter.xaxis else "x",
+        scatter.yaxis if scatter.yaxis else "y")
 
-      dct[xaxis].append(scatter)
-      dct[yaxis].append(scatter)
+      for axis in axis_pair:
+        if axis not in self._axis:
+          self._create_axis(axis)
+
+      dct[axis_pair].append(scatter)
 
     # setting for each axis
 
-    for axis, scatters in dct.items():
+    for axis_pair, scatters in dct.items():
 
-      if "range" not in self._axis[axis].layout:
-        minimum = min(min(s[axis[0]]) for s in scatters)
-        maximum = max(max(s[axis[0]]) for s in scatters)
-        padding = 0 if axis[0] == "x" else 0.05 * (maximum - minimum)
-        self.set_axis_range(axis, minimum-padding, maximum+padding)
+      for axis in axis_pair:
 
-      if "dtick" not in self._axis[axis].layout:
-        self.set_axis_ticks(
-          axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
+        if "range" not in self._axis[axis].layout:
+          minimum = min(min(s[axis[0]]) for s in scatters)
+          maximum = max(max(s[axis[0]]) for s in scatters)
+          padding = 0 if axis[0] == "x" else 0.05 * (maximum - minimum)
+          self.set_axis_range(axis, minimum-padding, maximum+padding)
 
-    # add dummy data to show minor ticks
+        if "dtick" not in self._axis[axis].layout:
+          self.set_axis_ticks(
+            axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
 
-    for axis in self._axis.values():
-      if axis.minor_name not in dct:
-        self.add_scatter()
-        self.data[-1].update({
-          "visible": False,
-          "{}axis".format(axis.minor_name[0]): axis.minor_name,
-        })
+      # add dummy data to show minor ticks
+
+      self.add_scatter()
+      self.data[-1].update({
+        "visible": False, **{
+          "{}axis".format(name[0]): name
+          for name in [self._axis[axis].minor_name for axis in axis_pair]
+        }
+      })
 
   def _heatmap(self, data, **kwargs):
     """
@@ -334,14 +338,112 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       raise TypeError("Wrong type of data: {}".format(type(data)))
 
     for d in data:
+
+      if "transpose" not in d:
+        d["transpose"] = True
+
+      nx, ny = np.array(d["z"]).shape
+
+      if not d["transpose"]:
+        nx, ny = ny, nx
+
+      if "x0" in d or "y0" in d:
+        if "x0" in d and "y0" in d:
+          d["origin"] = (d["x0"], d["y0"])
+          print("Values of 'x0' and 'y0' are used for 'origin'")
+        else:
+          raise RuntimeError("Both 'x0' and 'y0' are required")
+
+      if "origin" in d:
+
+        if "dx" not in d or "dy" not in d:
+          raise RuntimeError("Both 'dx' and 'dy' are required")
+
+        if "x" in d:
+          print("Value of 'x' will be overwritten")
+        if "y" in d:
+          print("Value of 'y' will be overwritten")
+
+        dx, dy = d["dx"], d["dy"]
+
+        d["x"] = d["origin"][0] + np.arange(nx+1)*dx
+        d["y"] = d["origin"][1] + np.arange(ny+1)*dy
+
+        del d["origin"]
+
+      elif not ("x" in d and "y" in d):
+        raise RuntimeError("Either 'origin' or 'x' and 'y' are required")
+
       self.add_heatmap()
       self.data[-1].update(d)
 
-  def _format_heatmap(self, heatmaps):
+  def _layout_heatmap(self, heatmaps, auto_size=True, **kwargs):
     """
     Method to format *Heatmap* plots.
     """
-    pass
+    # create all axis & categorize heatmaps by their axis
+
+    dct = {}
+
+    for heatmap in heatmaps:
+
+      axis_pair = (
+        heatmap.xaxis if heatmap.xaxis else "x",
+        heatmap.yaxis if heatmap.yaxis else "y")
+
+      for axis in axis_pair:
+        if axis in dct:
+          raise RuntimeError(
+            "{} is already used by {}".format(axis, dct[axis]))
+        if axis not in self._axis:
+          self._create_axis(axis)
+
+      dct[axis_pair] = heatmap
+
+    # setting for each axis
+
+    for axis_pair, heatmap in dct.items():
+
+      nx, ny = np.array(heatmap.z).shape
+
+      if not heatmap.transpose:
+        nx, ny = ny, nx
+
+      for axis, n, v in zip(axis_pair, (nx, ny), (heatmap.x, heatmap.y)):
+
+        if "range" not in self._axis[axis].layout:
+          minimum = v[0] if len(v) == n+1 else v[0] - 0.5*(v[1]-v[0])
+          maximum = v[-1] if len(v) == n+1 else v[-1] + 0.5*(v[-1]-v[-2])
+          self.set_axis_range(axis, minimum, maximum)
+
+        if "dtick" not in self._axis[axis].layout:
+          self.set_axis_ticks(
+            axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
+
+        self._axis[axis].layout["ticks"] = "outside"
+        self._axis[axis].minor_layout["ticks"] = "outside"
+        self._axis[axis].layout["constrain"] = "domain"
+        self._axis[axis].minor_layout["constrain"] = "domain"
+
+      self._axis[axis_pair[1]].layout["scaleanchor"] = axis_pair[0]
+
+      # add dummy data to show minor ticks
+
+      self.add_heatmap()
+      self.data[-1].update({
+        "visible": False, **{
+          "{}axis".format(name[0]): name
+          for name in [self._axis[axis].minor_name for axis in axis_pair]
+        }
+      })
+
+      # change plot size if the heatmap is single
+
+      if len(dct) == 1 and auto_size:
+        if nx > ny:
+          self._layout["width"] = (nx/ny) * self._layout["height"]
+        else:
+          self._layout["height"] = (ny/nx) * self._layout["width"]
 
   def _auto_axis_ticks(self, axis_range):
     """
