@@ -8,13 +8,13 @@ import plotly.offline.offline as pltoff
 # when downloading an image of the plot. Using `window._Plotly`
 # instead of `Plotly` is a workaround for this problem.
 download_html = """\
-<button onclick="download_image('{format}', {height}, {width}, '{filename}')">
+<button onclick="download_image('{plot_id}', '{format}', {height}, {width}, '{filename}')">
   Download Image as <span style="text-transform:uppercase;">{format}</span>
 </button>
 <script>
-  function download_image(format, height, width, filename)
+  function download_image(plot_id, format, height, width, filename)
   {{
-    var p = document.getElementById("{plot_id}");
+    var p = document.getElementById(plot_id);
     window._Plotly.downloadImage(
       p,
       {{
