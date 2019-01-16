@@ -30,8 +30,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
   """
 
   default_layout = {
-    "width": 640,
-    "height": 480,
+    "width": 450,
+    "height": 450,
     "font": {
       "family": "Arial",
       "size": 18,
@@ -40,6 +40,12 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "family": "Arial",
       "size": 20,
     },
+    "margin": {
+      "b": 10,
+      "l": 10,
+      "r": 10,
+      #"t": 80,
+    }
   }
 
   unitalicize=["(", ")", "sin", "cos", "tan", "exp", "log"]
@@ -188,7 +194,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       else:
         raise ValueError("Unrecognized position: {}".format(position))
 
-  def set_title(self, title, space=20):
+  def set_title(self, title, space=30):
     """
     Method to set a title string using `self._layout["annotations"]`.
     - `space` is distance in pixel between bottom of the title and
@@ -256,11 +262,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       self._create_axis(axis)
 
     if minimum is None or maximum is None:
-      del self._axis[axis].layout["range"]
-      del self._axis[axis].minor_layout["range"]
+      self._axis[axis].delete_layout("range")
     else:
-      self._axis[axis].layout["range"] = [minimum, maximum]
-      self._axis[axis].minor_layout["range"] = [minimum, maximum]
+      self._axis[axis].set_layout("range", [minimum, maximum])
 
   def set_axis_ticks(self, axis, interval, num_minor=5):
     """
@@ -271,8 +275,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     if axis not in self._axis:
       self._create_axis(axis)
 
-    self._axis[axis].layout["dtick"] = interval
-    self._axis[axis].minor_layout["dtick"] = interval/num_minor
+    self._axis[axis].set_layout(
+      "dtick", interval, minor_val=interval/num_minor)
 
   # Private Methods ----------------------------------------------------
 
@@ -295,9 +299,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
   def _create_axis(self, axis):
     """
-    Method to create an instance of AxisWithMinorTick.
+    Method to create an instance of MirroredAxisWithMinorTick.
     """
-    self._axis[axis] = AxisWithMinorTick(axis, self._layout)
+    self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout)
 
   def _scatter(self, data, **kwargs):
     """
@@ -339,27 +343,30 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
       for axis in axis_pair:
 
-        if "range" not in self._axis[axis].layout:
+        if not self._axis[axis].in_layout("range"):
           minimum = min(min(s[axis[0]]) for s in scatters)
           maximum = max(max(s[axis[0]]) for s in scatters)
           padding = 0 if axis[0] == "x" else 0.05 * (maximum - minimum)
           self.set_axis_range(axis, minimum-padding, maximum+padding)
 
-        if "dtick" not in self._axis[axis].layout:
+        if not self._axis[axis].in_layout("dtick"):
           self.set_axis_ticks(
             axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
 
-      # add dummy data to show minor ticks
+      # add dummy data to show mirror axis & minor ticks
 
-      dummy = self.add_scatter()
-      dummy.update({
-        "visible": False, **{
-          "{}axis".format(name[0]): name
-          for name in [self._axis[axis].minor_name for axis in axis_pair]
-        }
-      })
+      axis_names_list = [
+        [self._axis[axis].mirror_name for axis in axis_pair],
+        [self._axis[axis].minor_name for axis in axis_pair],
+      ]
 
-      self._dummy_uids.append(dummy["uid"])
+      for axis_names in axis_names_list:
+        dummy = self.add_scatter()
+        dummy.update({
+          "visible": False,
+          **{"{}axis".format(name[0]): name for name in axis_names}
+        })
+        self._dummy_uids.append(dummy["uid"])
 
   def _heatmap(self, data, **kwargs):
     """
@@ -445,33 +452,35 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
       for axis, n, v in zip(axis_pair, (nx, ny), (heatmap.x, heatmap.y)):
 
-        if "range" not in self._axis[axis].layout:
+        if not self._axis[axis].in_layout("range"):
           minimum = v[0] if len(v) == n+1 else v[0] - 0.5*(v[1]-v[0])
           maximum = v[-1] if len(v) == n+1 else v[-1] + 0.5*(v[-1]-v[-2])
           self.set_axis_range(axis, minimum, maximum)
 
-        if "dtick" not in self._axis[axis].layout:
+        if not self._axis[axis].in_layout("dtick"):
           self.set_axis_ticks(
             axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
 
-        self._axis[axis].layout["ticks"] = "outside"
-        self._axis[axis].minor_layout["ticks"] = "outside"
-        self._axis[axis].layout["constrain"] = "domain"
-        self._axis[axis].minor_layout["constrain"] = "domain"
+        self._axis[axis].set_layout("ticks", "outside")
+        self._axis[axis].set_layout("constrain", "domain")
+        #self._axis[axis].layout["constrain"] = "domain"
 
       self._axis[axis_pair[1]].layout["scaleanchor"] = axis_pair[0]
 
-      # add dummy data to show minor ticks
+      # add dummy data to show mirror axis & minor ticks
 
-      dummy = self.add_heatmap()
-      dummy.update({
-        "visible": False, **{
-          "{}axis".format(name[0]): name
-          for name in [self._axis[axis].minor_name for axis in axis_pair]
-        }
-      })
+      axis_names_list = [
+        [self._axis[axis].mirror_name for axis in axis_pair],
+        [self._axis[axis].minor_name for axis in axis_pair],
+      ]
 
-      self._dummy_uids.append(dummy["uid"])
+      for axis_names in axis_names_list:
+        dummy = self.add_heatmap()
+        dummy.update({
+          "visible": False,
+          **{"{}axis".format(name[0]): name for name in axis_names}
+        })
+        self._dummy_uids.append(dummy["uid"])
 
       # change plot size if the heatmap is single
 
@@ -515,55 +524,77 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
 #=======================================================================
 
-class AxisWithMinorTick:
+class MirroredAxisWithMinorTick:
 
-  default_layout = {
+  common_default_layout = {
     "automargin": True,
+    "zeroline": False,
+    "showgrid": False,
+    "ticks": "inside",
+  }
+
+  # `mirror="ticks"` cannot be used,
+  # because mirroring ticks breaks auto margin (for labeled axis).
+  main_default_layout = {
+    **cp.deepcopy(common_default_layout),
     "titlefont": {
       "family": "Arial",
       "size": 20,
     },
-    "zeroline": False,
-    "showgrid": False,
-    "showline": True,
+    "showline": False,
     "showticklabels": True,
-    "ticks": "inside",
     "ticklen": 5,
-    "mirror": "ticks",
     "hoverformat": ".f",
   }
 
-  minor_default_layout = {
-    "automargin": True,
-    "zeroline": False,
-    "showgrid": False,
+  mirror_default_layout = {
+    **cp.deepcopy(common_default_layout),
     "showline": False,
     "showticklabels": False,
-    "ticks": "inside",
+    "ticklen": 5,
+  }
+
+  minor_default_layout = {
+    **cp.deepcopy(common_default_layout),
+    "showline": True, # only one axis may show line
+    "showticklabels": False,
     "ticklen": 3,
     "mirror": "ticks",
   }
 
   opposite = {"x": "y", "y": "x"}
+  mirror_side = {"x": "top", "y": "right"}
 
   def __init__(self, axis, parent_layout, *args, **kwargs):
     """
-    Initializer of AxisWithMinorTick class.
+    Initializer of MirroredAxisWithMinorTick class.
     """
     self.name = axis
 
     direc = axis[0]
     index = int(axis[1:]) if 1 < len(axis) else 1
-    minor_index = 100 + index  # for minor ticks
+    mirror_index = 100 + index  # for mirror axis
+    minor_index = 200 + index  # for axis with minor ticks
 
+    self.mirror_name = "{}{}".format(direc, mirror_index)
     self.minor_name = "{}{}".format(direc, minor_index)
 
     layout_key = "{}axis{}".format(direc, index if 1 < index else "")
+    mirror_layout_key = "{}axis{}".format(direc, mirror_index)
     minor_layout_key = "{}axis{}".format(direc, minor_index)
 
     self.layout = parent_layout[layout_key] = merged_dict(
-      type(self).default_layout, parent_layout[layout_key]
+      type(self).main_default_layout, parent_layout[layout_key]
       if layout_key in parent_layout else {})
+
+    self.mirror_layout = parent_layout[mirror_layout_key] = merged_dict(
+      type(self).mirror_default_layout, parent_layout[mirror_layout_key]
+      if mirror_layout_key in parent_layout else {})
+
+    self.mirror_layout["side"] = type(self).mirror_side[direc]
+    self.mirror_layout["anchor"] = type(self).opposite[direc] + self.name[1:]
+    self.mirror_layout["overlaying"] = self.name
+    self.mirror_layout["scaleanchor"] = self.name
 
     self.minor_layout = parent_layout[minor_layout_key] = merged_dict(
       type(self).minor_default_layout, parent_layout[minor_layout_key]
@@ -575,3 +606,18 @@ class AxisWithMinorTick:
 
   def __repr__(self):
     return self.name
+
+  def delete_layout(self, key):
+    del self.layout[key]
+    del self.mirror_layout[key]
+    del self.minor_layout[key]
+
+  def set_layout(self, key, val, mirror_val=None, minor_val=None):
+    self.layout[key] = val
+    self.mirror_layout[key] = val if mirror_val is None else mirror_val
+    self.minor_layout[key] = val if minor_val is None else minor_val
+
+  def in_layout(self, key):
+    return all(
+      key in layout
+      for layout in [self.layout, self.mirror_layout, self.minor_layout])
