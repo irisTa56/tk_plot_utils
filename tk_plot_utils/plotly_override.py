@@ -1,8 +1,9 @@
 import plotly.offline as plt
 import plotly.graph_objs as pltgo
-import plotly.offline.offline as pltoff
 
 #-----------------------------------------------------------------------
+
+import plotly.offline.offline as pltoff
 
 # Jupyter causes "ReferenceError: Plotly is not defined"
 # when downloading an image of the plot. Using `window._Plotly`

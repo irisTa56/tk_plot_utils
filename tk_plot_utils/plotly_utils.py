@@ -12,7 +12,7 @@ from .utility_functions import merged_dict
 
 def make_subplots(scale=1.0, *args, **kwargs):
   """
-  Static method to interface with `plotly.tools.make_subplots`.
+  Function wrapping `plotly.tools.make_subplots`.
   """
   tmp = ExtendedFigureWidget(tools.make_subplots(*args, **kwargs))
 
@@ -21,6 +21,67 @@ def make_subplots(scale=1.0, *args, **kwargs):
       annotation["font"] = cp.deepcopy(tmp._layout["titlefont"])
 
   return tmp
+
+def make_scatter(data, **kwargs):
+  """
+  Function to create a list of `plotly.graph_objs.Scatter` instance(s)
+  from `dict` (`list`/`tuple` of `dict`).
+  """
+  if isinstance(data, dict):
+    data = [data]
+  elif not isinstance(data, (list, tuple)):
+    raise TypeError("Wrong type of data: {}".format(type(data)))
+
+  return [pltgo.Scatter(d) for d in data]
+
+def make_heatmap(data, **kwargs):
+  """
+  Function to create a list of `plotly.graph_objs.Heatmap` instance(s)
+  from `dict` (`list`/`tuple` of `dict`).
+  """
+  if isinstance(data, dict):
+    data = [data]
+  elif not isinstance(data, (list, tuple)):
+    raise TypeError("Wrong type of data: {}".format(type(data)))
+
+  for d in data:
+
+    if "transpose" not in d:
+      d["transpose"] = True
+
+    nx, ny = np.array(d["z"]).shape
+
+    if not d["transpose"]:
+      nx, ny = ny, nx
+
+    if "x0" in d or "y0" in d:
+      if "x0" in d and "y0" in d:
+        d["origin"] = (d["x0"], d["y0"])
+        print("Values of 'x0' and 'y0' are used for 'origin'")
+      else:
+        raise RuntimeError("Both 'x0' and 'y0' are required")
+
+    if "origin" in d:
+
+      if "dx" not in d or "dy" not in d:
+        raise RuntimeError("Both 'dx' and 'dy' are required")
+
+      if "x" in d:
+        print("Value of 'x' will be overwritten")
+      if "y" in d:
+        print("Value of 'y' will be overwritten")
+
+      dx, dy = d["dx"], d["dy"]
+
+      d["x"] = d["origin"][0] + np.arange(nx+1)*dx
+      d["y"] = d["origin"][1] + np.arange(ny+1)*dy
+
+      del d["origin"]
+
+    elif not ("x" in d and "y" in d):
+      raise RuntimeError("Either 'origin' or 'x' and 'y' are required")
+
+    return [pltgo.Heatmap(d) for d in data]
 
 #=======================================================================
 
@@ -69,54 +130,26 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     for trace in figure.data:
       self.append_trace(trace, *args, **kwargs)
 
-  def scatter(self, data, **kwargs):
-    """
-    Method to create `plotly.graph_objs.Scatter` instance(s) from `dict`
-    (`list`/`tuple` of `dict`) and add it (them) to this instance.
-    """
-    self.data = tuple()
-    return self.append_scatter(data, **kwargs)
-
-  def append_scatter(self, data, **kwargs):
-    """
-    Method to create `plotly.graph_objs.Scatter` instance(s) from `dict`
-    (`list`/`tuple` of `dict`) and add it (them) to this instance.
-    """
-    self._scatter(data, **kwargs)
-    return self
-
-  def heatmap(self, data, **kwargs):
-    """
-    Method to create `plotly.graph_objs.Heatmap` instance(s) from `dict`
-    (`list`/`tuple` of `dict`) and add it (them) to this instance.
-    """
-    self.data = tuple()
-    return self.append_heatmap(data, **kwargs)
-
-  def append_heatmap(self, data, **kwargs):
-    """
-    Method to create `plotly.graph_objs.Heatmap` instance(s) from `dict`
-    (`list`/`tuple` of `dict`) and add it (them) to this instance.
-    """
-    self._heatmap(data, **kwargs)
-    return self
-
-  def show(self, data=None, plot="scatter", download=True, **kwargs):
+  def show(self, data, refresh=True, download=True, **kwargs):
     """
     Method to show a plot of data contained in this instance.
     """
-    if data is not None:
-      if plot == "scatter":
-        self._scatter(data, **kwargs)
-      elif plot == "heatmap":
-        self._heatmap(data, **kwargs)
-      else:
-        raise ValueError("Unrecognized plot type: {}".format(plot))
+    if refresh:
+      self.data = tuple()
 
     dct = coll.defaultdict(list)
 
-    for i, d in enumerate(self._data):
-      dct[d["type"]].append(self.data[i])
+    for d in data:
+      if isinstance(d, pltgo.Scatter):
+        self.add_scatter()
+        self.data[-1].update(d)
+        dct["scatter"].append(self.data[-1])
+      elif isinstance(d, pltgo.Heatmap):
+        self.add_heatmap()
+        self.data[-1].update(d)
+        dct["heatmap"].append(self.data[-1])
+      else:
+        raise TypeError("Non supported data type: {}".format(type(d)))
 
     if "scatter" in dct:
       self._layout_scatter(dct["scatter"], **kwargs)
@@ -303,20 +336,6 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout)
 
-  def _scatter(self, data, **kwargs):
-    """
-    Method to create `plotly.graph_objs.Scatter` instance(s) from `dict`
-    (`list`/`tuple` of `dict`) and add it (them) to this instance.
-    """
-    if isinstance(data, dict):
-      data = [data]
-    elif not isinstance(data, (list, tuple)):
-      raise TypeError("Wrong type of data: {}".format(type(data)))
-
-    for d in data:
-      self.add_scatter()
-      self.data[-1].update(d)
-
   def _layout_scatter(self, scatters, **kwargs):
     """
     Method to format *Scatter* plots.
@@ -367,56 +386,6 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           **{"{}axis".format(name[0]): name for name in axis_names}
         })
         self._dummy_uids.append(dummy["uid"])
-
-  def _heatmap(self, data, **kwargs):
-    """
-    Method to create `plotly.graph_objs.Heatmap` instance(s) from `dict`
-    (`list`/`tuple` of `dict`) and add it (them) to this instance.
-    """
-    if isinstance(data, dict):
-      data = [data]
-    elif not isinstance(data, (list, tuple)):
-      raise TypeError("Wrong type of data: {}".format(type(data)))
-
-    for d in data:
-
-      if "transpose" not in d:
-        d["transpose"] = True
-
-      nx, ny = np.array(d["z"]).shape
-
-      if not d["transpose"]:
-        nx, ny = ny, nx
-
-      if "x0" in d or "y0" in d:
-        if "x0" in d and "y0" in d:
-          d["origin"] = (d["x0"], d["y0"])
-          print("Values of 'x0' and 'y0' are used for 'origin'")
-        else:
-          raise RuntimeError("Both 'x0' and 'y0' are required")
-
-      if "origin" in d:
-
-        if "dx" not in d or "dy" not in d:
-          raise RuntimeError("Both 'dx' and 'dy' are required")
-
-        if "x" in d:
-          print("Value of 'x' will be overwritten")
-        if "y" in d:
-          print("Value of 'y' will be overwritten")
-
-        dx, dy = d["dx"], d["dy"]
-
-        d["x"] = d["origin"][0] + np.arange(nx+1)*dx
-        d["y"] = d["origin"][1] + np.arange(ny+1)*dy
-
-        del d["origin"]
-
-      elif not ("x" in d and "y" in d):
-        raise RuntimeError("Either 'origin' or 'x' and 'y' are required")
-
-      self.add_heatmap()
-      self.data[-1].update(d)
 
   def _layout_heatmap(self, heatmaps, auto_size=True, **kwargs):
     """
@@ -603,9 +572,6 @@ class MirroredAxisWithMinorTick:
     self.minor_layout["anchor"] = type(self).opposite[direc] + self.name[1:]
     self.minor_layout["overlaying"] = self.name
     self.minor_layout["scaleanchor"] = self.name
-
-  def __repr__(self):
-    return self.name
 
   def delete_layout(self, key):
     del self.layout[key]
