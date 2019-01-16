@@ -36,5 +36,7 @@ This project would not be possible without the following great open-source proje
 
 ## To Do
 
+* Title by annotation
+* Optimize margin
 * `make_scatter`, `make_heatmap`
 * Documentation

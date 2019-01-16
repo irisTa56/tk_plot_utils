@@ -14,19 +14,7 @@ def make_subplots(scale=1.0, *args, **kwargs):
   """
   Static method to interface with `plotly.tools.make_subplots`.
   """
-  if 0 < len(args):
-    rows = args[0]
-  if 1 < len(args):
-    cols = args[1]
-  if "rows" in kwargs:
-    rows = kwargs["rows"]
-  if "cols" in kwargs:
-    cols = kwargs["cols"]
-
   tmp = ExtendedFigureWidget(tools.make_subplots(*args, **kwargs))
-
-  #tmp._layout["width"] *= scale*cols
-  #tmp._layout["height"] *= scale*rows
 
   if "annotations" in tmp._layout:
     for annotation in tmp._layout["annotations"]:
@@ -200,11 +188,40 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       else:
         raise ValueError("Unrecognized position: {}".format(position))
 
-  def set_title(self, title):
+  def set_title(self, title, space=20):
     """
-    Method to set a string to `self._layout["title"]`.
+    Method to set a title string using `self._layout["annotations"]`.
+    - `space` is distance in pixel between bottom of the title and
+      top of the main plot area.
     """
-    self._layout["title"] = title
+    title_layout = {
+      "font": cp.deepcopy(self._layout["titlefont"]),
+      "name": "title",
+      "showarrow": False,
+      "text": title,
+      "x": 0.5,
+      "xanchor": "center",
+      "xref": "paper",
+      "y": 1.0,
+      "yanchor": "bottom",
+      "yref": "paper",
+      "yshift": space,
+    }
+
+    if "annotations" in self._layout:
+
+      found = False
+
+      for annotation in self._layout["annotations"]:
+        if "name" in annotation and annotation["name"] == "title":
+          found = True
+          annotation["text"] = title
+
+      if not found:
+        self._layout["annotations"].append(title_layout)
+
+    else:
+      self._layout["annotations"] = [title_layout]
 
   def set_axis_title(
     self, axis, name, char=None, unit=None):
@@ -341,6 +358,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           for name in [self._axis[axis].minor_name for axis in axis_pair]
         }
       })
+
       self._dummy_uids.append(dummy["uid"])
 
   def _heatmap(self, data, **kwargs):
@@ -452,6 +470,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           for name in [self._axis[axis].minor_name for axis in axis_pair]
         }
       })
+
       self._dummy_uids.append(dummy["uid"])
 
       # change plot size if the heatmap is single
@@ -499,6 +518,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 class AxisWithMinorTick:
 
   default_layout = {
+    "automargin": True,
     "titlefont": {
       "family": "Arial",
       "size": 20,
@@ -510,10 +530,11 @@ class AxisWithMinorTick:
     "ticks": "inside",
     "ticklen": 5,
     "mirror": "ticks",
-    "hoverformat": ".f"
+    "hoverformat": ".f",
   }
 
   minor_default_layout = {
+    "automargin": True,
     "zeroline": False,
     "showgrid": False,
     "showline": False,
