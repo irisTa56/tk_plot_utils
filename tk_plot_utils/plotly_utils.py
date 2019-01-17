@@ -10,18 +10,6 @@ from .utility_functions import merged_dict
 
 #=======================================================================
 
-def make_subplots(scale=1.0, *args, **kwargs):
-  """
-  Function wrapping `plotly.tools.make_subplots`.
-  """
-  tmp = ExtendedFigureWidget(tools.make_subplots(*args, **kwargs))
-
-  if "annotations" in tmp._layout:
-    for annotation in tmp._layout["annotations"]:
-      annotation["font"] = cp.deepcopy(tmp._layout["titlefont"])
-
-  return tmp
-
 def make_scatter(data, **kwargs):
   """
   Function to create a list of `plotly.graph_objs.Scatter` instance(s)
@@ -30,7 +18,7 @@ def make_scatter(data, **kwargs):
   if isinstance(data, dict):
     data = [data]
   elif not isinstance(data, (list, tuple)):
-    raise TypeError("Wrong type of data: {}".format(type(data)))
+    raise TypeError("Invalid type of data: {}".format(type(data)))
 
   return [pltgo.Scatter(d) for d in data]
 
@@ -42,7 +30,7 @@ def make_heatmap(data, **kwargs):
   if isinstance(data, dict):
     data = [data]
   elif not isinstance(data, (list, tuple)):
-    raise TypeError("Wrong type of data: {}".format(type(data)))
+    raise TypeError("Invalid type of data: {}".format(type(data)))
 
   for d in data:
 
@@ -56,8 +44,8 @@ def make_heatmap(data, **kwargs):
 
     if "x0" in d or "y0" in d:
       if "x0" in d and "y0" in d:
+        print("Values of 'x0' and 'y0' will be used for 'origin'")
         d["origin"] = (d["x0"], d["y0"])
-        print("Values of 'x0' and 'y0' are used for 'origin'")
       else:
         raise RuntimeError("Both 'x0' and 'y0' are required")
 
@@ -105,11 +93,10 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "b": 10,
       "l": 10,
       "r": 10,
-      #"t": 80,
     }
   }
 
-  unitalicize=["(", ")", "sin", "cos", "tan", "exp", "log"]
+  unitalicized=["(", ")", "sin", "cos", "tan", "exp", "log"]
 
   def __init__(self, *args, **kwargs):
     """
@@ -120,34 +107,26 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     self._init_layout(cp.deepcopy(self._layout))
     self._init_axis(cp.deepcopy(self._layout))
 
+    # required to delete dummy data used for showing mirror/minor axis
     self._dummy_uids = []
 
-  def assign_subplot(self, figure, *args, **kwargs):
-    """
-    Method to assign traces contained in `figure` to a specified subplot
-    using `plotly.graph_objs.FigureWidget.append_trace`.
-    """
-    for trace in figure.data:
-      self.append_trace(trace, *args, **kwargs)
+    # required to align axis range in subplots
+    self._range_alignment = {}
 
-  def show(self, data, refresh=True, download=True, **kwargs):
+  def show(self, data=None, download=True, **kwargs):
     """
     Method to show a plot of data contained in this instance.
     """
-    if refresh:
-      self.data = tuple()
+    if data is not None:
+      self._set_data(data)
 
     dct = coll.defaultdict(list)
 
-    for d in data:
+    for d in self.data:
       if isinstance(d, pltgo.Scatter):
-        self.add_scatter()
-        self.data[-1].update(d)
-        dct["scatter"].append(self.data[-1])
+        dct["scatter"].append(d)
       elif isinstance(d, pltgo.Heatmap):
-        self.add_heatmap()
-        self.data[-1].update(d)
-        dct["heatmap"].append(self.data[-1])
+        dct["heatmap"].append(d)
       else:
         raise TypeError("Non supported data type: {}".format(type(d)))
 
@@ -161,8 +140,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     auto_kwargs = {
       "show_link": False,
       "image": "svg" if download else None,
-      "image_width": self._layout["width"],
-      "image_height": self._layout["height"],
+      "image_width": self.layout.width,
+      "image_height": self.layout.height,
       "filename": "plot",
     }
 
@@ -174,6 +153,100 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     self._clear_dummy_traces()
 
+  def subplots(
+    self, trace_array, align={}, **kwargs):
+    """
+    Method to make subplots from an array of trace instances.
+    - `align` is a dictionary of which keys are 'row' or 'col'
+      and values are 'each' or 'all'.
+      - `align={'row': 'each'}` leads to that initial range of 'y*'
+      ('*' is a wild card) axes in each row will be aligned.
+      - `align={'col': 'all'}` leads to that initial range of all 'x*'
+      axes will be aligned.
+    """
+    # set subplots
+
+    counter = 0
+    subplots = []
+    flatten_array = []
+
+    for row in trace_array:
+
+      subplots_row = []
+
+      for cell in row:
+
+        counter += 1
+        suffix = str(counter) if 1 < counter else ""
+        pair = ("x"+suffix, "y"+suffix)
+
+        for trace in cell if isinstance(cell, (list, tuple)) else [cell]:
+          trace.xaxis, trace.yaxis = pair
+          flatten_array.append(trace)
+
+        for axis in pair:
+          if axis not in self._axis:
+            self._create_axis(axis)
+
+        subplots_row.append(pair)
+
+      subplots.append(subplots_row)
+
+    subplots_repr = [["".join(pair) for pair in row] for row in subplots]
+
+    self._show_subplot_grid(subplots_repr)
+
+    # set align
+
+    self._range_alignment = {}
+
+    if "x" in align:
+
+      if align["x"] == "each":
+        master_axes = [pair[0] for pair in subplots[0]]
+        for row in subplots:
+          for icol, (axis, _) in enumerate(row):
+            self._append_range_alignment(master_axes[icol], axis)
+
+      elif align["x"] == "all":
+        master_axis = subplots[0][0][0]
+        for row in subplots:
+          for axis, _ in row:
+            self._append_range_alignment(master_axis, axis)
+
+      else:
+        raise RuntimeError(
+          "Invalid align scheme: {}".format(align["x"]))
+
+    if "y" in align:
+
+      if align["y"] == "each":
+        master_axes = [pair[1] for pair in [row[0] for row in subplots]]
+        for irow, row in enumerate(subplots):
+          for _, axis in row:
+            self._append_range_alignment(master_axes[irow], axis)
+
+      elif align["y"] == "all":
+        master_axis = subplots[0][0][1]
+        for row in subplots:
+          for _, axis in row:
+            self._append_range_alignment(master_axis, axis)
+
+      else:
+        raise RuntimeError(
+          "Invalid align scheme: {}".format(align["y"]))
+
+    self._show_range_alignment()
+
+    # set grid
+
+    self.layout.grid = {
+      "subplots": subplots_repr,
+      **kwargs
+    }
+
+    self._set_data(flatten_array)
+
   def set_legend(self, position=None, padding=10, **kwargs):
     """
     Method to set layout of the legend. Calling this method with no
@@ -184,41 +257,41 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       of the plot (legend is inside the frame).
     - `**kwargs` will be added to `plotly.graph_objs.Layout.legend`.
     """
-    self._layout["legend"] = kwargs
+    self.layout.legend = kwargs
 
     if position is None:
-      self._layout["showlegend"] = False
+      self.layout.showlegend = False
 
     elif not any([k in kwargs for k in ["x", "y", "xanchor", "yanchor"]]):
 
-      xpadding = padding / self._layout["width"] # in normalized coordinates
-      ypadding = padding / self._layout["height"] # in normalized coordinates
+      xpadding = padding / self.layout.width # in normalized coordinates
+      ypadding = padding / self.layout.height # in normalized coordinates
 
       if position == "default":
         pass
       elif position == "upper right":
-        self._layout["legend"].update({
+        self.layout.legend.update({
           "x": 1-xpadding,
           "xanchor": "right",
           "y": 1-ypadding,
           "yanchor": "top",
         })
       elif position == "lower right":
-        self._layout["legend"].update({
+        self.layout.legend.update({
           "x": 1-xpadding,
           "xanchor": "right",
           "y": ypadding,
           "yanchor": "bottom",
         })
       elif position == "upper left":
-        self._layout["legend"].update({
+        self.layout.legend.update({
           "x": xpadding,
           "xanchor": "left",
           "y": 1-ypadding,
           "yanchor": "top",
         })
       elif position == "lower left":
-        self._layout["legend"].update({
+        self.layout.legend.update({
           "x": xpadding,
           "xanchor": "left",
           "y": ypadding,
@@ -229,7 +302,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
   def set_title(self, title, space=30):
     """
-    Method to set a title string using `self._layout["annotations"]`.
+    Method to set a title string using `self.layout.annotations`.
     - `space` is distance in pixel between bottom of the title and
       top of the main plot area.
     """
@@ -247,6 +320,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "yshift": space,
     }
 
+    # NOTE: Since `self.layout.annotations` is immutable,
+    # `self._layout["annotations"]` should be used.
     if "annotations" in self._layout:
 
       found = False
@@ -255,6 +330,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         if "name" in annotation and annotation["name"] == "title":
           found = True
           annotation["text"] = title
+          annotation["yshift"] = space
 
       if not found:
         self._layout["annotations"].append(title_layout)
@@ -263,29 +339,53 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       self._layout["annotations"] = [title_layout]
 
   def set_axis_title(
-    self, axis, name, char=None, unit=None):
+    self, axis, name=None, char=None, unit=None):
     """
-    Method to set a string to `self._layout["*axis*"]["title"]`,
-    where the wildcard `*` is determined by `axis`.
+    Method to set a title string to the given axis.
     The string is something like `"{name}, <i>{char}</i> [{unit}]"`,
     if `char` and `unit` are provided.
     """
     if axis not in self._axis:
       self._create_axis(axis)
 
-    title = str(name)
+    if name is None and char is None and unit is None:
+      self._axis[axis].delete_layout("title")
+    else:
+      title = str(name)
 
-    if char is not None:
+      if char is not None:
 
-      for c in type(self).unitalicize:  # `1 < len(c)` is OK.
-        char = char.replace(c, "</i>{}<i>".format(c))
+        for c in type(self).unitalicized:  # `1 < len(c)` is OK.
+          char = char.replace(c, "</i>{}<i>".format(c))
 
-      title += ", <i>{}</i>".format(char)
+        title += ", <i>{}</i>".format(char)
 
-    if unit is not None:
-      title += " [{}]".format(unit)
+      if unit is not None:
+        title += " [{}]".format(unit)
 
-    self._axis[axis].layout["title"] = title
+      self._axis[axis].layout["title"] = title
+
+  def set_x_title(self, name=None, char=None, unit=None):
+    """
+    Method wrapping `self.set_axis_title()`.
+    """
+    if "grid" in self._layout:
+      for bottom_plot in self.layout.grid.subplots[-1]:
+        self.set_axis_title(
+          bottom_plot.split("y")[0], name, char, unit)
+    else:
+      self.set_axis_title("x", name, char, unit)
+
+  def set_y_title(self, name=None, char=None, unit=None):
+    """
+    Method wrapping `self.set_axis_title()`.
+    """
+    if "grid" in self._layout:
+      for left_plot in [row[0] for row in self.layout.grid.subplots]:
+        self.set_axis_title(
+          "y"+left_plot.split("y")[1], name, char, unit)
+    else:
+      self.set_axis_title("y", name, char, unit)
 
   def set_axis_range(self, axis, minimum=None, maximum=None):
     """
@@ -335,6 +435,23 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method to create an instance of MirroredAxisWithMinorTick.
     """
     self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout)
+
+  def _set_data(self, data):
+    """
+    Method to set `self.data`.
+    - `data` should be a list of trace instances.
+    """
+    self.data = tuple()
+
+    for d in data:
+      if isinstance(d, pltgo.Scatter):
+        self.add_scatter()
+        self.data[-1].update(d)
+      elif isinstance(d, pltgo.Heatmap):
+        self.add_heatmap()
+        self.data[-1].update(d)
+      else:
+        raise TypeError("Non supported data type: {}".format(type(d)))
 
   def _layout_scatter(self, scatters, **kwargs):
     """
@@ -386,6 +503,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           **{"{}axis".format(name[0]): name for name in axis_names}
         })
         self._dummy_uids.append(dummy["uid"])
+
+    self._align_subplot_range()
 
   def _layout_heatmap(self, heatmaps, auto_size=True, **kwargs):
     """
@@ -451,13 +570,15 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         })
         self._dummy_uids.append(dummy["uid"])
 
-      # change plot size if the heatmap is single
+      # change figure size if the heatmap is single
 
-      if len(dct) == 1 and auto_size:
-        if nx > ny:
-          self._layout["width"] = (nx/ny) * self._layout["height"]
-        else:
-          self._layout["height"] = (ny/nx) * self._layout["width"]
+      #if len(dct) == 1 and auto_size:
+      #  if nx > ny:
+      #    self._layout["width"] = (nx/ny) * self._layout["height"]
+      #  else:
+      #    self._layout["height"] = (ny/nx) * self._layout["width"]
+
+    self._align_subplot_range()
 
   def _clear_dummy_traces(self):
     """
@@ -490,6 +611,49 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       return 2*10**order, 2
     else:
       return 10**order, 10
+
+  def _align_subplot_range(self):
+    """
+    Method to align axis range of subplots.
+    """
+    for k, v in self._range_alignment.items():
+      minimum = min(self._axis[axis].layout["range"][0] for axis in v)
+      maximum = max(self._axis[axis].layout["range"][1] for axis in v)
+      self.set_axis_range(k, minimum, maximum)
+
+  def _append_range_alignment(self, master, axis):
+    """
+    Method to append new axis to `self._range_alignment`.
+    """
+    if master in self._range_alignment:
+      self._range_alignment[axis] = self._range_alignment[master]
+      self._range_alignment[axis].append(axis)
+    elif master == axis:
+      self._range_alignment[axis] = [axis]
+    else:
+      raise RuntimeError("Invalid range alignment")
+
+  def _show_range_alignment(self):
+    """
+    Method to show `self._range_alignment`.
+    """
+    if self._range_alignment:
+      print("reference for range alignment:")
+
+    for k, v in self._range_alignment.items():
+      print("{:3s}: min/max of {}".format(k,v))
+
+  def _show_subplot_grid(self, subplots):
+    """
+    Method to show axis pair corresponding to each subplot grid.
+    """
+    print("subplot grid:")
+
+    maxlen = max(len(s) for s in sum(subplots, []))
+
+    for row in subplots:
+      print("| {} |".format(" | ".join(
+        format(s, "^{}s".format(maxlen)) for s in row)))
 
 #=======================================================================
 
@@ -537,6 +701,8 @@ class MirroredAxisWithMinorTick:
   def __init__(self, axis, parent_layout, *args, **kwargs):
     """
     Initializer of MirroredAxisWithMinorTick class.
+    Note that `self.layout` of this class is NOT an instance of
+    `plotly.graph_objs.Layout`, but just a Python dictionary.
     """
     self.name = axis
 
@@ -556,6 +722,10 @@ class MirroredAxisWithMinorTick:
       type(self).main_default_layout, parent_layout[layout_key]
       if layout_key in parent_layout else {})
 
+    # ensure confort space between tick labels and axis line
+    if direc == "y":
+      self.layout["ticksuffix"] = "\u2009"
+
     self.mirror_layout = parent_layout[mirror_layout_key] = merged_dict(
       type(self).mirror_default_layout, parent_layout[mirror_layout_key]
       if mirror_layout_key in parent_layout else {})
@@ -574,9 +744,12 @@ class MirroredAxisWithMinorTick:
     self.minor_layout["scaleanchor"] = self.name
 
   def delete_layout(self, key):
-    del self.layout[key]
-    del self.mirror_layout[key]
-    del self.minor_layout[key]
+    if key in self.layout:
+      del self.layout[key]
+    if key in self.mirror_layout:
+      del self.mirror_layout[key]
+    if key in self.minor_layout:
+      del self.minor_layout[key]
 
   def set_layout(self, key, val, mirror_val=None, minor_val=None):
     self.layout[key] = val

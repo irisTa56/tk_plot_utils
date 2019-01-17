@@ -42,6 +42,47 @@ download_html += """\
 </script>
 """
 
+# marge subplot titles
+download_html += """\
+<script>
+  (function(){{
+    let tags = [
+      ...document.getElementById("{plot_id}")
+      .querySelectorAll("g.infolayer")[0].getElementsByTagName("g")];
+    let xtags = tags
+      .filter((g) => g.className.baseVal.startsWith('g-x') && g.innerHTML);
+    let xtexts = xtags
+      .map((g) => g.getElementsByTagName('text')[0].innerHTML);
+    if (1 < xtags.length && xtexts.every((t) => t == xtexts[0]))
+    {{
+      let xsum = 0.0;
+      xtags.forEach((g, i) =>
+        {{
+          xsum += parseFloat(
+            g.getElementsByTagName('text')[0].getAttribute('x'));
+          if (0 < i) g.innerHTML = "";
+        }});
+      xtags[0].getElementsByTagName('text')[0].setAttribute('x', xsum/xtags.length);
+    }}
+    let ytags = tags
+      .filter((g) => g.className.baseVal.startsWith('g-y') && g.innerHTML);
+    let ytexts = ytags
+      .map((g) => g.getElementsByTagName('text')[0].innerHTML);
+    if (1 < ytags.length && ytexts.every((t) => t == ytexts[0]))
+    {{
+      let ysum = 0.0;
+      ytags.forEach((g, i) =>
+        {{
+          ysum += parseFloat(
+            g.getElementsByTagName('text')[0].getAttribute('y'));
+          if (0 < i) g.innerHTML = "";
+        }});
+      ytags[0].getElementsByTagName('text')[0].setAttribute('y', ysum/ytags.length);
+    }}
+  }})();
+</script>
+"""
+
 get_image_download_script_original = pltoff.get_image_download_script
 
 def get_image_download_script_override(caller):
