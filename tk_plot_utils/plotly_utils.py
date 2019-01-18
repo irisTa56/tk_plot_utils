@@ -96,7 +96,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     }
   }
 
-  unitalicized=["(", ")", "sin", "cos", "tan", "exp", "log"]
+  unitalicized = ["(", ")", "sin", "cos", "tan", "exp", "log"]
 
   def __init__(self, *args, **kwargs):
     """
@@ -120,22 +120,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     if data is not None:
       self._set_data(data)
 
-    dct = coll.defaultdict(list)
-
-    for d in self.data:
-      if isinstance(d, pltgo.Scatter):
-        dct["scatter"].append(d)
-      elif isinstance(d, pltgo.Heatmap):
-        dct["heatmap"].append(d)
-      else:
-        raise TypeError("Non supported data type: {}".format(type(d)))
-
-    if "scatter" in dct:
-      self._layout_scatter(dct["scatter"], **kwargs)
-    if "heatmap" in dct:
-      self._layout_heatmap(dct["heatmap"], **kwargs)
-
-    # plotting
+    self._layout_all(**kwargs)
 
     auto_kwargs = {
       "show_link": False,
@@ -247,7 +232,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     self._set_data(flatten_array)
 
-  def set_legend(self, position=None, padding=10, **kwargs):
+  def set_legend(
+    self, position=None, padding=10, xpad=None, ypad=None, **kwargs):
     """
     Method to set layout of the legend. Calling this method with no
     parameter hides the legend.
@@ -257,48 +243,35 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       of the plot (legend is inside the frame).
     - `**kwargs` will be added to `plotly.graph_objs.Layout.legend`.
     """
-    self.layout.legend = kwargs
+    self.layout.showlegend = False if position is None else True
+    self.layout.legend = {} if position == "default" else kwargs
 
-    if position is None:
-      self.layout.showlegend = False
+    if position is None or position == "default" or position == "custom":
+      pass
+    elif any(
+      position == s
+      for s in ["upper right", "lower right", "upper left", "lower left"]):
 
-    elif not any([k in kwargs for k in ["x", "y", "xanchor", "yanchor"]]):
+      # NOTE: The following two lines try to convert `padding` unit
+      # to normalized coordinates. But, since actual domain size is
+      # different from `self.layout.width* self.layout.height`,
+      # this conversion is not precise.
+      xpadding = (padding if xpad is None else xpad) / self.layout.width
+      ypadding = (padding if ypad is None else ypad) / self.layout.height
 
-      xpadding = padding / self.layout.width # in normalized coordinates
-      ypadding = padding / self.layout.height # in normalized coordinates
+      vertical, horizontal = position.split()
 
-      if position == "default":
-        pass
-      elif position == "upper right":
-        self.layout.legend.update({
-          "x": 1-xpadding,
-          "xanchor": "right",
-          "y": 1-ypadding,
-          "yanchor": "top",
-        })
-      elif position == "lower right":
-        self.layout.legend.update({
-          "x": 1-xpadding,
-          "xanchor": "right",
-          "y": ypadding,
-          "yanchor": "bottom",
-        })
-      elif position == "upper left":
-        self.layout.legend.update({
-          "x": xpadding,
-          "xanchor": "left",
-          "y": 1-ypadding,
-          "yanchor": "top",
-        })
-      elif position == "lower left":
-        self.layout.legend.update({
-          "x": xpadding,
-          "xanchor": "left",
-          "y": ypadding,
-          "yanchor": "bottom",
-        })
-      else:
-        raise ValueError("Unrecognized position: {}".format(position))
+      x = 1-xpadding if horizontal == "right" else xpadding
+      xanchor =  "right" if horizontal == "right" else "left"
+      y = 1-ypadding if vertical == "upper" else ypadding
+      yanchor = "top" if vertical == "upper" else "bottom"
+
+      self.layout.legend.update({
+        "x": x, "xanchor": xanchor,
+        "y": y, "yanchor": yanchor,
+      })
+    else:
+      raise ValueError("Unrecognized position: {}".format(position))
 
   def set_title(self, title, space=30):
     """
@@ -399,6 +372,20 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       self._axis[axis].set_layout("range", [minimum, maximum])
 
+  def set_x_range(self, minimum=None, maximum=None):
+    """
+    Method wrapping `self.set_axis_range()`.
+    """
+    for axis in (k for k in self._axis.keys() if k.startswith("x")):
+      self.set_axis_range(axis, minimum, maximum)
+
+  def set_y_range(self, minimum=None, maximum=None):
+    """
+    Method wrapping `self.set_axis_range()`.
+    """
+    for axis in (k for k in self._axis.keys() if k.startswith("y")):
+      self.set_axis_range(axis, minimum, maximum)
+
   def set_axis_ticks(self, axis, interval, num_minor=5):
     """
     Method to set ticks.
@@ -410,6 +397,20 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     self._axis[axis].set_layout(
       "dtick", interval, minor_val=interval/num_minor)
+
+  def set_x_ticks(self, interval, num_minor=5):
+    """
+    Method wrapping `self.set_axis_ticks()`.
+    """
+    for axis in (k for k in self._axis.keys() if k.startswith("x")):
+      self.set_axis_ticks(axis, interval, num_minor)
+
+  def set_y_ticks(self, interval, num_minor=5):
+    """
+    Method wrapping `self.set_axis_ticks()`.
+    """
+    for axis in (k for k in self._axis.keys() if k.startswith("y")):
+      self.set_axis_ticks(axis, interval, num_minor)
 
   # Private Methods ----------------------------------------------------
 
@@ -429,6 +430,12 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     for k in _layout.keys():
       if re.search("^[xyz]axis\d*", k):
         self._create_axis(k.replace("axis", ""))
+
+    if "xaxis" not in _layout:
+      self._create_axis("x")
+
+    if "yaxis" not in _layout:
+      self._create_axis("y")
 
   def _create_axis(self, axis):
     """
@@ -452,6 +459,25 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         self.data[-1].update(d)
       else:
         raise TypeError("Non supported data type: {}".format(type(d)))
+
+  def _layout_all(self, **kwargs):
+    """
+    Method to format all traces.
+    """
+    dct = coll.defaultdict(list)
+
+    for d in self.data:
+      if isinstance(d, pltgo.Scatter):
+        dct["scatter"].append(d)
+      elif isinstance(d, pltgo.Heatmap):
+        dct["heatmap"].append(d)
+      else:
+        raise TypeError("Non supported data type: {}".format(type(d)))
+
+    if "scatter" in dct:
+      self._layout_scatter(dct["scatter"], **kwargs)
+    if "heatmap" in dct:
+      self._layout_heatmap(dct["heatmap"], **kwargs)
 
   def _layout_scatter(self, scatters, **kwargs):
     """
@@ -570,14 +596,6 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         })
         self._dummy_uids.append(dummy["uid"])
 
-      # change figure size if the heatmap is single
-
-      #if len(dct) == 1 and auto_size:
-      #  if nx > ny:
-      #    self._layout["width"] = (nx/ny) * self._layout["height"]
-      #  else:
-      #    self._layout["height"] = (ny/nx) * self._layout["width"]
-
     self._align_subplot_range()
 
   def _clear_dummy_traces(self):
@@ -598,16 +616,13 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     `self._set_axis_ticks`.
     - `length`: distance from the minimum to maximum of the axis range.
     """
-    tmpd = (axis_range[1]-axis_range[0])/5
-    log10 = np.log10(tmpd)
-    order = int(log10)
+    tmpd = (axis_range[1]-axis_range[0])/3  # at least 3 tick labels
+    order = int(np.floor(np.log10(tmpd)))
     scaled = tmpd/(10**order)
 
-    if 7.5 < scaled:
-      return 10**(order+1), 10
-    elif 3.5 < scaled:
+    if 5 < scaled:
       return 5*10**order, 5
-    elif 1.5 < scaled:
+    elif 2 < scaled:
       return 2*10**order, 2
     else:
       return 10**order, 10
@@ -689,7 +704,7 @@ class MirroredAxisWithMinorTick:
 
   minor_default_layout = {
     **cp.deepcopy(common_default_layout),
-    "showline": True, # only one axis may show line
+    "showline": True,  # only one axis may show line
     "showticklabels": False,
     "ticklen": 3,
     "mirror": "ticks",
