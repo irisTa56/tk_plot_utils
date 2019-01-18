@@ -147,81 +147,10 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       - `align={'col': 'all'}` leads to that initial range of all 'x*'
       axes will be aligned.
     """
-    # set subplots
+    subplots, subplots_repr, flatten_array = self._subplots(trace_array)
 
-    counter = 0
-    subplots = []
-    flatten_array = []
-
-    for row in trace_array:
-
-      subplots_row = []
-
-      for cell in row:
-
-        counter += 1
-        suffix = str(counter) if 1 < counter else ""
-        pair = ("x"+suffix, "y"+suffix)
-
-        for trace in cell if isinstance(cell, (list, tuple)) else [cell]:
-          trace.xaxis, trace.yaxis = pair
-          flatten_array.append(trace)
-
-        for axis in pair:
-          if axis not in self._axis:
-            self._create_axis(axis)
-
-        subplots_row.append(pair)
-
-      subplots.append(subplots_row)
-
-    subplots_repr = [["".join(pair) for pair in row] for row in subplots]
-
-    self._show_subplot_grid(subplots_repr)
-
-    # set align
-
-    self._range_alignment = {}
-
-    if "x" in align:
-
-      if align["x"] == "each":
-        master_axes = [pair[0] for pair in subplots[0]]
-        for row in subplots:
-          for icol, (axis, _) in enumerate(row):
-            self._append_range_alignment(master_axes[icol], axis)
-
-      elif align["x"] == "all":
-        master_axis = subplots[0][0][0]
-        for row in subplots:
-          for axis, _ in row:
-            self._append_range_alignment(master_axis, axis)
-
-      else:
-        raise RuntimeError(
-          "Invalid align scheme: {}".format(align["x"]))
-
-    if "y" in align:
-
-      if align["y"] == "each":
-        master_axes = [pair[1] for pair in [row[0] for row in subplots]]
-        for irow, row in enumerate(subplots):
-          for _, axis in row:
-            self._append_range_alignment(master_axes[irow], axis)
-
-      elif align["y"] == "all":
-        master_axis = subplots[0][0][1]
-        for row in subplots:
-          for _, axis in row:
-            self._append_range_alignment(master_axis, axis)
-
-      else:
-        raise RuntimeError(
-          "Invalid align scheme: {}".format(align["y"]))
-
-    self._show_range_alignment()
-
-    # set grid
+    if align:
+      self._subplots_range_alignment(subplots, align)
 
     self.layout.grid = {
       "subplots": subplots_repr,
@@ -358,6 +287,14 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       self.set_axis_title("y", name, char, unit)
 
+  def clear_axis_title(self, direc="xy"):
+    """
+    Method to clear axis title.
+    """
+    for d in direc:
+      for axis in (k for k in self._axis.keys() if k.startswith(d)):
+        self.set_axis_title(axis)
+
   def set_axis_range(self, axis, minimum=None, maximum=None):
     """
     Method to set range of an axis.
@@ -410,7 +347,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     for axis in (k for k in self._axis.keys() if k.startswith("y")):
       self.set_axis_ticks(axis, interval, num_minor)
 
-  # Private Methods ----------------------------------------------------
+  # Private Methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # Initialization/Creation --------------------------------------------
 
   def _init_layout(self, _layout):
     """
@@ -441,22 +380,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout)
 
-  def _set_data(self, data):
-    """
-    Method to set `self.data`.
-    - `data` should be a list of trace instances.
-    """
-    self.data = tuple()
-
-    for d in data:
-      if isinstance(d, pltgo.Scatter):
-        self.add_scatter()
-        self.data[-1].update(d)
-      elif isinstance(d, pltgo.Heatmap):
-        self.add_heatmap()
-        self.data[-1].update(d)
-      else:
-        raise TypeError("Non supported data type: {}".format(type(d)))
+  # Layout -------------------------------------------------------------
 
   def _layout_all(self, **kwargs):
     """
@@ -515,7 +439,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
       self._add_dummy_traces(axis_pair, self.add_scatter)
 
-    self._align_subplot_range()
+    if self._range_alignment:
+      self._align_subplots_range()
 
   def _layout_heatmap(self, heatmaps, auto_size=True, **kwargs):
     """
@@ -568,7 +493,10 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
       self._add_dummy_traces(axis_pair, self.add_heatmap)
 
-    self._align_subplot_range()
+    if self._range_alignment:
+      self._align_subplots_range()
+
+  # Dummy Traces -------------------------------------------------------
 
   def _add_dummy_traces(self, axis_pair, callback):
     """
@@ -599,24 +527,89 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       except IndexError:
         raise RuntimeError("Dummy trace might be deleted accidentally")
 
-  def _auto_axis_ticks(self, axis_range):
-    """
-    Method to automatically determine `interval` and `num_minor` for
-    `self._set_axis_ticks`.
-    - `length`: distance from the minimum to maximum of the axis range.
-    """
-    tmpd = (axis_range[1]-axis_range[0])/3  # at least 3 tick labels
-    order = int(np.floor(np.log10(tmpd)))
-    scaled = tmpd/(10**order)
+  # Subplots -----------------------------------------------------------
 
-    if 5 < scaled:
-      return 5*10**order, 5
-    elif 2 < scaled:
-      return 2*10**order, 2
-    else:
-      return 10**order, 10
+  def _subplots(self, trace_array):
+    """
+    Method to make subplots arrangement from an array of trances.
+    """
+    counter = 0
+    subplots = []
+    flatten_array = []
 
-  def _align_subplot_range(self):
+    for row in trace_array:
+
+      subplots_row = []
+
+      for cell in row:
+
+        counter += 1
+        suffix = str(counter) if 1 < counter else ""
+        pair = ("x"+suffix, "y"+suffix)
+
+        for trace in cell if isinstance(cell, (list, tuple)) else [cell]:
+          trace.xaxis, trace.yaxis = pair
+          flatten_array.append(trace)
+
+        for axis in pair:
+          if axis not in self._axis:
+            self._create_axis(axis)
+
+        subplots_row.append(pair)
+
+      subplots.append(subplots_row)
+
+    subplots_repr = [["".join(pair) for pair in row] for row in subplots]
+
+    self._show_subplot_grid(subplots_repr)
+
+    return subplots, subplots_repr, flatten_array
+
+  def _subplots_range_alignment(self, subplots, align):
+    """
+    Method to make settings to align subplots.
+    """
+    self._range_alignment = {}
+
+    if "x" in align:
+
+      if align["x"] == "each":
+        master_axes = [pair[0] for pair in subplots[0]]
+        for row in subplots:
+          for icol, (axis, _) in enumerate(row):
+            self._append_range_alignment(master_axes[icol], axis)
+
+      elif align["x"] == "all":
+        master_axis = subplots[0][0][0]
+        for row in subplots:
+          for axis, _ in row:
+            self._append_range_alignment(master_axis, axis)
+
+      else:
+        raise RuntimeError(
+          "Invalid align scheme for x: {}".format(align["x"]))
+
+    if "y" in align:
+
+      if align["y"] == "each":
+        master_axes = [pair[1] for pair in [row[0] for row in subplots]]
+        for irow, row in enumerate(subplots):
+          for _, axis in row:
+            self._append_range_alignment(master_axes[irow], axis)
+
+      elif align["y"] == "all":
+        master_axis = subplots[0][0][1]
+        for row in subplots:
+          for _, axis in row:
+            self._append_range_alignment(master_axis, axis)
+
+      else:
+        raise RuntimeError(
+          "Invalid align scheme for y: {}".format(align["y"]))
+
+    self._show_range_alignment()
+
+  def _align_subplots_range(self):
     """
     Method to align axis range of subplots.
     """
@@ -624,6 +617,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       minimum = min(self._axis[axis].layout["range"][0] for axis in v)
       maximum = max(self._axis[axis].layout["range"][1] for axis in v)
       self.set_axis_range(k, minimum, maximum)
+      self.set_axis_ticks(
+        k, *self._auto_axis_ticks(self._axis[k].layout["range"]))
 
   def _append_range_alignment(self, master, axis):
     """
@@ -658,6 +653,42 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     for row in subplots:
       print("| {} |".format(" | ".join(
         format(s, "^{}s".format(maxlen)) for s in row)))
+
+  # Miscellaneous -----------------------------------------------------------
+
+  def _set_data(self, data):
+    """
+    Method to set `self.data`.
+    - `data` should be a list of trace instances.
+    """
+    self.data = tuple()
+
+    for d in data:
+      if isinstance(d, pltgo.Scatter):
+        self.add_scatter()
+        self.data[-1].update(d)
+      elif isinstance(d, pltgo.Heatmap):
+        self.add_heatmap()
+        self.data[-1].update(d)
+      else:
+        raise TypeError("Non supported data type: {}".format(type(d)))
+
+  def _auto_axis_ticks(self, axis_range):
+    """
+    Method to automatically determine `interval` and `num_minor` for
+    `self._set_axis_ticks`.
+    - `length`: distance from the minimum to maximum of the axis range.
+    """
+    tmpd = (axis_range[1]-axis_range[0])/3  # at least 3 tick labels
+    order = int(np.floor(np.log10(tmpd)))
+    scaled = tmpd/(10**order)
+
+    if 5 < scaled:
+      return 5*10**order, 5
+    elif 2 < scaled:
+      return 2*10**order, 2
+    else:
+      return 10**order, 10
 
 #=======================================================================
 

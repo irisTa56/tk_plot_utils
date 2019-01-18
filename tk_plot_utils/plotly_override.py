@@ -74,10 +74,10 @@ download_html += """\
       ytags.forEach((g, i) =>
         {{
           ysum += parseFloat(
-            g.getElementsByTagName('text')[0].getAttribute('y'));
+            g.getElementsByTagName('text')[0].getAttribute('x'));
           if (0 < i) g.innerHTML = "";
         }});
-      ytags[0].getElementsByTagName('text')[0].setAttribute('y', ysum/ytags.length);
+      ytags[0].getElementsByTagName('text')[0].setAttribute('x', ysum/ytags.length);
     }}
   }})();
 </script>
