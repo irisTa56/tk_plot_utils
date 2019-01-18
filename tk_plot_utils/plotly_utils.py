@@ -686,9 +686,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     if 5 < scaled:
       return 5*10**order, 5
     elif 2 < scaled:
-      return 2*10**order, 2
+      return 2*10**order, 4
     else:
-      return 10**order, 10
+      return 10**order, 5
 
 #=======================================================================
 
