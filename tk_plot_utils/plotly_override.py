@@ -74,10 +74,17 @@ download_html += """\
       ytags.forEach((g, i) =>
         {{
           ysum += parseFloat(
-            g.getElementsByTagName('text')[0].getAttribute('x'));
+            g.getElementsByTagName('text')[0].getAttribute('y'));
           if (0 < i) g.innerHTML = "";
         }});
-      ytags[0].getElementsByTagName('text')[0].setAttribute('x', ysum/ytags.length);
+      let text_element = ytags[0].getElementsByTagName('text')[0];
+      let old_y = text_element.getAttribute('y');
+      let old_transform = text_element.getAttribute('transform');
+      let new_y = (ysum/ytags.length).toString();
+      let new_transform = old_transform.slice(
+        0, old_transform.lastIndexOf(old_y)) + new_y + ')';
+      text_element.setAttribute('y', new_y);
+      text_element.setAttribute('transform', new_transform);
     }}
   }})();
 </script>
