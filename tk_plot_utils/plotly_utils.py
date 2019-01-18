@@ -3,8 +3,6 @@ import copy as cp
 import numpy as np
 import collections as coll
 
-from plotly import tools
-
 from .plotly_override import  plt, pltgo
 from .utility_functions import merged_dict
 
@@ -515,20 +513,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           self.set_axis_ticks(
             axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
 
-      # add dummy data to show mirror axis & minor ticks
-
-      axis_names_list = [
-        [self._axis[axis].mirror_name for axis in axis_pair],
-        [self._axis[axis].minor_name for axis in axis_pair],
-      ]
-
-      for axis_names in axis_names_list:
-        dummy = self.add_scatter()
-        dummy.update({
-          "visible": False,
-          **{"{}axis".format(name[0]): name for name in axis_names}
-        })
-        self._dummy_uids.append(dummy["uid"])
+      self._add_dummy_traces(axis_pair, self.add_scatter)
 
     self._align_subplot_range()
 
@@ -581,22 +566,26 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
       self._axis[axis_pair[1]].layout["scaleanchor"] = axis_pair[0]
 
-      # add dummy data to show mirror axis & minor ticks
-
-      axis_names_list = [
-        [self._axis[axis].mirror_name for axis in axis_pair],
-        [self._axis[axis].minor_name for axis in axis_pair],
-      ]
-
-      for axis_names in axis_names_list:
-        dummy = self.add_heatmap()
-        dummy.update({
-          "visible": False,
-          **{"{}axis".format(name[0]): name for name in axis_names}
-        })
-        self._dummy_uids.append(dummy["uid"])
+      self._add_dummy_traces(axis_pair, self.add_heatmap)
 
     self._align_subplot_range()
+
+  def _add_dummy_traces(self, axis_pair, callback):
+    """
+    Method to add dummy trances required to show mirror and minor ticks.
+    """
+    namepair_list = [
+      tuple(self._axis[axis].mirror_name for axis in axis_pair),
+      tuple(self._axis[axis].minor_name for axis in axis_pair),
+    ]
+
+    for namepair in namepair_list:
+      dummy = callback()
+      dummy.update({
+        "visible": False,
+        **{"{}axis".format(name[0]): name for name in namepair}
+      })
+      self._dummy_uids.append(dummy["uid"])
 
   def _clear_dummy_traces(self):
     """
