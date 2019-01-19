@@ -1,7 +1,8 @@
 import re
 import copy as cp
 import numpy as np
-import collections as coll
+import itertools as it
+import collections as co
 
 from .plotly_override import  plt, pltgo
 from .utility_functions import merged_dict
@@ -137,7 +138,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     self._clear_dummy_traces()
 
   def subplots(
-    self, trace_array, align={}, **kwargs):
+    self, trace_array, share="", align={}, **kwargs):
     """
     Method to make subplots from an array of trace instances.
     - `align` is a dictionary of which keys are 'row' or 'col'
@@ -147,17 +148,22 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       - `align={'col': 'all'}` leads to that initial range of all 'x*'
       axes will be aligned.
     """
-    subplots, subplots_repr, flatten_array = self._subplots(trace_array)
+    subplots, trace_list = self._subplots(trace_array, share)
 
     if align:
       self._subplots_range_alignment(subplots, align)
 
     self.layout.grid = {
-      "subplots": subplots_repr,
+      "subplots": subplots,
       **kwargs
     }
 
-    self._set_data(flatten_array)
+    if "x" in share:
+      self.layout.grid.xgap = 0.1
+    if "y" in share:
+      self.layout.grid.ygap = 0.1
+
+    self._set_data(trace_list)
 
   def set_legend(
     self, position=None, padding=10, xpad=None, ypad=None, **kwargs):
@@ -270,9 +276,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method wrapping `self.set_axis_title()`.
     """
     if "grid" in self._layout:
-      for bottom_plot in self.layout.grid.subplots[-1]:
+      for subplot in self.layout.grid.subplots[-1]:
         self.set_axis_title(
-          bottom_plot.split("y")[0], name, char, unit)
+          subplot[:subplot.find("y")], name, char, unit)
     else:
       self.set_axis_title("x", name, char, unit)
 
@@ -281,9 +287,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method wrapping `self.set_axis_title()`.
     """
     if "grid" in self._layout:
-      for left_plot in [row[0] for row in self.layout.grid.subplots]:
+      for subplot in [row[0] for row in self.layout.grid.subplots]:
         self.set_axis_title(
-          "y"+left_plot.split("y")[1], name, char, unit)
+          subplot[subplot.find("y"):], name, char, unit)
     else:
       self.set_axis_title("y", name, char, unit)
 
@@ -374,11 +380,11 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     if "yaxis" not in _layout:
       self._create_axis("y")
 
-  def _create_axis(self, axis):
+  def _create_axis(self, axis, anchor=None):
     """
     Method to create an instance of MirroredAxisWithMinorTick.
     """
-    self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout)
+    self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout, anchor)
 
   # Layout -------------------------------------------------------------
 
@@ -386,7 +392,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to format all traces.
     """
-    dct = coll.defaultdict(list)
+    dct = co.defaultdict(list)
 
     for d in self.data:
       if isinstance(d, pltgo.Scatter):
@@ -407,7 +413,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     # create all axis & categorize scatters by their axis
 
-    dct = coll.defaultdict(list)
+    dct = co.defaultdict(list)
 
     for scatter in scatters:
 
@@ -487,7 +493,6 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
         self._axis[axis].set_layout("ticks", "outside")
         self._axis[axis].set_layout("constrain", "domain")
-        #self._axis[axis].layout["constrain"] = "domain"
 
       self._axis[axis_pair[1]].layout["scaleanchor"] = axis_pair[0]
 
@@ -503,8 +508,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method to add dummy trances required to show mirror and minor ticks.
     """
     namepair_list = [
-      tuple(self._axis[axis].mirror_name for axis in axis_pair),
-      tuple(self._axis[axis].minor_name for axis in axis_pair),
+      *it.product(*(self._axis[axis].mirrors for axis in axis_pair)),
+      *it.product(*(self._axis[axis].minors for axis in axis_pair))
     ]
 
     for namepair in namepair_list:
@@ -519,51 +524,63 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to delete all trances of which 'uid' is in `self._dummy_uids`.
     """
-    while self._dummy_uids:
-      uid = self._dummy_uids.pop()
-      try:
-        idx = [i for i, t in enumerate(self.data) if t.uid == uid][0]
-        self.data = self.data[:idx] + self.data[idx+1:]
-      except IndexError:
-        raise RuntimeError("Dummy trace might be deleted accidentally")
+    prev_len = len(self.data)
+
+    self.data = tuple(
+      d for d in self.data if d.uid not in self._dummy_uids)
+
+    if prev_len - len(self.data) == len(self._dummy_uids):
+      self._dummy_uids.clear()
+    else:
+      raise RuntimeError("Dummy trace might be deleted accidentally")
 
   # Subplots -----------------------------------------------------------
 
-  def _subplots(self, trace_array):
+  def _subplots(self, trace_array, share=""):
     """
     Method to make subplots arrangement from an array of trances.
     """
+    if not any(share == s for s in ["", "x", "y", "xy"]):
+      raise ValueError("Invalid shared axis setting: {}".format(share))
+
     counter = 0
     subplots = []
     flatten_array = []
 
-    for row in trace_array:
+    for irow, row in enumerate(trace_array):
 
       subplots_row = []
 
-      for cell in row:
+      for icol, cell in enumerate(row):
 
         counter += 1
-        suffix = str(counter) if 1 < counter else ""
-        pair = ("x"+suffix, "y"+suffix)
+
+        xindex = icol+1 if "x" in share else counter
+        xsuffix = str(xindex) if 1 < xindex else ""
+        yindex = irow+1 if "y" in share else counter
+        ysuffix = str(yindex) if 1 < yindex else ""
+        pair = ("x"+xsuffix, "y"+ysuffix)
 
         for trace in cell if isinstance(cell, (list, tuple)) else [cell]:
           trace.xaxis, trace.yaxis = pair
           flatten_array.append(trace)
 
-        for axis in pair:
+        for axis, opposite in [pair, pair[::-1]]:
           if axis not in self._axis:
-            self._create_axis(axis)
+            self._create_axis(axis, opposite)
+          elif axis[0] in share:
+            self._axis[axis].append_mirror_axis(self._layout, opposite)
+            self._axis[axis].append_minor_axis(self._layout, opposite)
 
         subplots_row.append(pair)
 
       subplots.append(subplots_row)
 
-    subplots_repr = [["".join(pair) for pair in row] for row in subplots]
+    subplots = [["".join(pair) for pair in row] for row in subplots]
 
-    self._show_subplot_grid(subplots_repr)
+    self._show_subplot_grid(subplots)
 
-    return subplots, subplots_repr, flatten_array
+    return subplots, flatten_array
 
   def _subplots_range_alignment(self, subplots, align):
     """
@@ -572,36 +589,39 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     self._range_alignment = {}
 
     if "x" in align:
+      master_axes = [pair[:pair.find("y")] for pair in subplots[0]]
 
       if align["x"] == "each":
-        master_axes = [pair[0] for pair in subplots[0]]
         for row in subplots:
-          for icol, (axis, _) in enumerate(row):
+          for icol, pair in enumerate(row):
+            axis = pair[:pair.find("y")]
             self._append_range_alignment(master_axes[icol], axis)
 
       elif align["x"] == "all":
-        master_axis = subplots[0][0][0]
         for row in subplots:
-          for axis, _ in row:
-            self._append_range_alignment(master_axis, axis)
+          for pair in row:
+            axis = pair[:pair.find("y")]
+            self._append_range_alignment(master_axes[0], axis)
 
       else:
         raise RuntimeError(
           "Invalid align scheme for x: {}".format(align["x"]))
 
     if "y" in align:
+      master_axes = [
+        pair[pair.find("y"):] for pair in [row[0] for row in subplots]]
 
       if align["y"] == "each":
-        master_axes = [pair[1] for pair in [row[0] for row in subplots]]
         for irow, row in enumerate(subplots):
-          for _, axis in row:
+          for pair in row:
+            axis = pair[pair.find("y"):]
             self._append_range_alignment(master_axes[irow], axis)
 
       elif align["y"] == "all":
-        master_axis = subplots[0][0][1]
         for row in subplots:
-          for _, axis in row:
-            self._append_range_alignment(master_axis, axis)
+          for pair in row:
+            axis = pair[pair.find("y"):]
+            self._append_range_alignment(master_axes[0], axis)
 
       else:
         raise RuntimeError(
@@ -733,7 +753,7 @@ class MirroredAxisWithMinorTick:
   opposite = {"x": "y", "y": "x"}
   mirror_side = {"x": "top", "y": "right"}
 
-  def __init__(self, axis, parent_layout, *args, **kwargs):
+  def __init__(self, axis, parent_layout, anchor=None, *args, **kwargs):
     """
     Initializer of MirroredAxisWithMinorTick class.
     Note that `self.layout` of this class is NOT an instance of
@@ -741,57 +761,94 @@ class MirroredAxisWithMinorTick:
     """
     self.name = axis
 
-    direc = axis[0]
-    index = int(axis[1:]) if 1 < len(axis) else 1
-    mirror_index = 100 + index  # for mirror axis
-    minor_index = 200 + index  # for axis with minor ticks
+    self.direc = axis[0]
+    self.index = int(axis[1:]) if 1 < len(axis) else 1
 
-    self.mirror_name = "{}{}".format(direc, mirror_index)
-    self.minor_name = "{}{}".format(direc, minor_index)
-
-    layout_key = "{}axis{}".format(direc, index if 1 < index else "")
-    mirror_layout_key = "{}axis{}".format(direc, mirror_index)
-    minor_layout_key = "{}axis{}".format(direc, minor_index)
+    layout_key = "{}axis{}".format(
+      self.direc, self.index if 1 < self.index else "")
 
     self.layout = parent_layout[layout_key] = merged_dict(
       type(self).main_default_layout, parent_layout[layout_key]
       if layout_key in parent_layout else {})
 
     # ensure confort space between tick labels and axis line
-    if direc == "y":
+    if self.direc == "y":
       self.layout["ticksuffix"] = "\u2009"
 
-    self.mirror_layout = parent_layout[mirror_layout_key] = merged_dict(
-      type(self).mirror_default_layout, parent_layout[mirror_layout_key]
-      if mirror_layout_key in parent_layout else {})
+    self.mirrors = []
+    self.minors = []
+    self._mirror_layouts = []
+    self._minor_layouts = []
 
-    self.mirror_layout["side"] = type(self).mirror_side[direc]
-    self.mirror_layout["anchor"] = type(self).opposite[direc] + self.name[1:]
-    self.mirror_layout["overlaying"] = self.name
-    self.mirror_layout["scaleanchor"] = self.name
+    if not anchor:
+      anchor = type(self).opposite[self.direc] + self.name[1:]
 
-    self.minor_layout = parent_layout[minor_layout_key] = merged_dict(
-      type(self).minor_default_layout, parent_layout[minor_layout_key]
-      if minor_layout_key in parent_layout else {})
-
-    self.minor_layout["anchor"] = type(self).opposite[direc] + self.name[1:]
-    self.minor_layout["overlaying"] = self.name
-    self.minor_layout["scaleanchor"] = self.name
+    self.append_mirror_axis(parent_layout, anchor)
+    self.append_minor_axis(parent_layout, anchor)
 
   def delete_layout(self, key):
     if key in self.layout:
       del self.layout[key]
-    if key in self.mirror_layout:
-      del self.mirror_layout[key]
-    if key in self.minor_layout:
-      del self.minor_layout[key]
+    for mirror_layout in self._mirror_layouts:
+      if key in mirror_layout:
+        del mirror_layout[key]
+    for minor_layout in self._minor_layouts:
+      if key in minor_layout:
+        del minor_layout[key]
 
   def set_layout(self, key, val, mirror_val=None, minor_val=None):
     self.layout[key] = val
-    self.mirror_layout[key] = val if mirror_val is None else mirror_val
-    self.minor_layout[key] = val if minor_val is None else minor_val
+    for mirror_layout in self._mirror_layouts:
+      mirror_layout[key] = val if mirror_val is None else mirror_val
+    for minor_layout in self._minor_layouts:
+      minor_layout[key] = val if minor_val is None else minor_val
 
   def in_layout(self, key):
     return all(
-      key in layout
-      for layout in [self.layout, self.mirror_layout, self.minor_layout])
+      key in layout for layout in [
+        self.layout, *self._mirror_layouts, *self._minor_layouts])
+
+  def append_mirror_axis(self, parent_layout, anchor):
+
+    mirror_index = 100 * (2*len(self._mirror_layouts)+1) + self.index
+
+    mirror_layout_key = "{}axis{}".format(self.direc, mirror_index)
+
+    mirror_layout = parent_layout[mirror_layout_key] = merged_dict(
+      type(self).mirror_default_layout, parent_layout[mirror_layout_key]
+      if mirror_layout_key in parent_layout else {})
+
+    mirror_layout["anchor"] = anchor
+    mirror_layout["overlaying"] = self.name
+    mirror_layout["scaleanchor"] = self.name
+
+    if self.direc == "x":
+      mirror_layout["side"] = type(self).mirror_side[self.direc]
+      if self._mirror_layouts:
+        del self._mirror_layouts[-1]["side"]
+        self._mirror_layouts[-1]["mirror"] = "ticks"
+    elif self.direc == "y":
+      if self._mirror_layouts:
+        mirror_layout["mirror"] = "ticks"
+      else:
+        mirror_layout["side"] = type(self).mirror_side[self.direc]
+
+    self.mirrors.append("{}{}".format(self.direc, mirror_index))
+    self._mirror_layouts.append(mirror_layout)
+
+  def append_minor_axis(self, parent_layout, anchor):
+
+    minor_index = 100 * (2*len(self._minor_layouts)+2) + self.index
+
+    minor_layout_key = "{}axis{}".format(self.direc, minor_index)
+
+    minor_layout = parent_layout[minor_layout_key] = merged_dict(
+      type(self).minor_default_layout, parent_layout[minor_layout_key]
+      if minor_layout_key in parent_layout else {})
+
+    minor_layout["anchor"] = anchor
+    minor_layout["overlaying"] = self.name
+    minor_layout["scaleanchor"] = self.name
+
+    self.minors.append("{}{}".format(self.direc, minor_index))
+    self._minor_layouts.append(minor_layout)

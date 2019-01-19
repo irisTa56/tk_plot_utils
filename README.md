@@ -36,5 +36,5 @@ This project would not be possible without the following great open-source proje
 
 ## To Do
 
-* Multi-plot layout
+* Serial number (alphabet) for subplots
 * Documentation
