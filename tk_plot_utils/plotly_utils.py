@@ -4,7 +4,7 @@ import numpy as np
 import itertools as it
 import collections as co
 
-from .plotly_override import  plt, pltgo
+from .plotly_html import  plt, pltgo, postprocess_by_js
 from .utility_functions import merged_dict
 
 #=======================================================================
@@ -89,8 +89,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "size": 20,
     },
     "margin": {
-      "b": 10,
-      "l": 10,
+      "b": 0,
+      "l": 0,
       "r": 10,
     }
   }
@@ -136,6 +136,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     plt.iplot(self, **auto_kwargs, **kwargs)
 
     self._clear_dummy_traces()
+
+    postprocess_by_js()
 
   def subplots(
     self, trace_array, share="", align={}, **kwargs):
@@ -429,17 +431,34 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     # setting for each axis
 
+    skip_range_setting = {
+      k: v.in_layout("range") for k, v in self._axis.items()
+    }
+
+    skip_ticks_setting = {
+      k: v.in_layout("dtick") for k, v in self._axis.items()
+    }
+
     for axis_pair, scatters in dct.items():
 
       for axis in axis_pair:
 
-        if not self._axis[axis].in_layout("range"):
+        if not skip_range_setting[axis]:
           minimum = min(min(s[axis[0]]) for s in scatters)
           maximum = max(max(s[axis[0]]) for s in scatters)
+          # set padding in y direction only
           padding = 0 if axis[0] == "x" else 0.05 * (maximum - minimum)
-          self.set_axis_range(axis, minimum-padding, maximum+padding)
+          minimum -= padding
+          maximum += padding
+          if self._axis[axis].in_layout("range"):
+            self.set_axis_range(
+              axis,
+              min(minimum, self._axis[axis].layout["range"][0]),
+              max(maximum, self._axis[axis].layout["range"][1]))
+          else:
+            self.set_axis_range(axis, minimum, maximum)
 
-        if not self._axis[axis].in_layout("dtick"):
+        if not skip_ticks_setting[axis]:
           self.set_axis_ticks(
             axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
 
@@ -473,6 +492,14 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     # setting for each axis
 
+    skip_range_setting = {
+      k: v.in_layout("range") for k, v in self._axis.items()
+    }
+
+    skip_ticks_setting = {
+      k: v.in_layout("dtick") for k, v in self._axis.items()
+    }
+
     for axis_pair, heatmap in dct.items():
 
       nx, ny = np.array(heatmap.z).shape
@@ -482,12 +509,18 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
       for axis, n, v in zip(axis_pair, (nx, ny), (heatmap.x, heatmap.y)):
 
-        if not self._axis[axis].in_layout("range"):
+        if not skip_range_setting[axis]:
           minimum = v[0] if len(v) == n+1 else v[0] - 0.5*(v[1]-v[0])
           maximum = v[-1] if len(v) == n+1 else v[-1] + 0.5*(v[-1]-v[-2])
-          self.set_axis_range(axis, minimum, maximum)
+          if self._axis[axis].in_layout("range"):
+            self.set_axis_range(
+              axis,
+              min(minimum, self._axis[axis].layout["range"][0]),
+              max(maximum, self._axis[axis].layout["range"][1]))
+          else:
+            self.set_axis_range(axis, minimum, maximum)
 
-        if not self._axis[axis].in_layout("dtick"):
+        if not skip_ticks_setting[axis]:
           self.set_axis_ticks(
             axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
 
@@ -674,7 +707,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       print("| {} |".format(" | ".join(
         format(s, "^{}s".format(maxlen)) for s in row)))
 
-  # Miscellaneous -----------------------------------------------------------
+  # Miscellaneous ------------------------------------------------------
 
   def _set_data(self, data):
     """
