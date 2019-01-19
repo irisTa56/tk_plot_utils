@@ -448,15 +448,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           maximum = max(max(s[axis[0]]) for s in scatters)
           # set padding in y direction only
           padding = 0 if axis[0] == "x" else 0.05 * (maximum - minimum)
-          minimum -= padding
-          maximum += padding
-          if self._axis[axis].in_layout("range"):
-            self.set_axis_range(
-              axis,
-              min(minimum, self._axis[axis].layout["range"][0]),
-              max(maximum, self._axis[axis].layout["range"][1]))
-          else:
-            self.set_axis_range(axis, minimum, maximum)
+          self._extend_axis_range(axis, minimum-padding, maximum+padding)
 
         if not skip_ticks_setting[axis]:
           self.set_axis_ticks(
@@ -512,13 +504,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         if not skip_range_setting[axis]:
           minimum = v[0] if len(v) == n+1 else v[0] - 0.5*(v[1]-v[0])
           maximum = v[-1] if len(v) == n+1 else v[-1] + 0.5*(v[-1]-v[-2])
-          if self._axis[axis].in_layout("range"):
-            self.set_axis_range(
-              axis,
-              min(minimum, self._axis[axis].layout["range"][0]),
-              max(maximum, self._axis[axis].layout["range"][1]))
-          else:
-            self.set_axis_range(axis, minimum, maximum)
+          self._extend_axis_range(axis, minimum, maximum)
 
         if not skip_ticks_setting[axis]:
           self.set_axis_ticks(
@@ -725,6 +711,19 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         self.data[-1].update(d)
       else:
         raise TypeError("Non supported data type: {}".format(type(d)))
+
+  def _extend_axis_range(self, axis, minimum, maximum):
+    """
+    Method to extend range of the given axis. If the range has not
+    been set yet, `minimum` and `maximum` will be set as it is.
+    """
+    if self._axis[axis].in_layout("range"):
+      self.set_axis_range(
+        axis,
+        min(minimum, self._axis[axis].layout["range"][0]),
+        max(maximum, self._axis[axis].layout["range"][1]))
+    else:
+      self.set_axis_range(axis, minimum, maximum)
 
   def _auto_axis_ticks(self, axis_range):
     """
