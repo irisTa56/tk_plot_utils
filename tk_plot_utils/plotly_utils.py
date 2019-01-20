@@ -835,14 +835,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     - `data` should be a list of trace instances.
     """
     self.data = tuple()
-
-    for d in data:
-      if isinstance(d, pltgo.Scatter):
-        self.add_scatter(**d)
-      elif isinstance(d, pltgo.Heatmap):
-        self.add_heatmap(**d)
-      else:
-        raise TypeError("Non supported data type: {}".format(type(d)))
+    self.add_traces(data)
 
 #=======================================================================
 
