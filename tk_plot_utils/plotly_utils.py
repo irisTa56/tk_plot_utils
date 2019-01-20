@@ -137,7 +137,16 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     self._clear_dummy_traces()
 
-    postprocess_by_js()
+    if "annotations" in self.layout:
+      dct = {
+        a["name"]: i for i, a in enumerate(self.layout.annotations)
+        if "name" in a and a.name.endswith("-title")
+      }
+      postprocess_by_js(
+        dct["x-title"] if "x-title" in dct else None,
+        dct["y-title"] if "y-title" in dct else None)
+    else:
+      postprocess_by_js()
 
   def subplots(
     self, trace_array, share="", align={}, **kwargs):
@@ -215,7 +224,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       top of the main plot area.
     """
     title_layout = {
-      "font": cp.deepcopy(self._layout["titlefont"]),
+      "font": self.layout.titlefont.to_plotly_json(),
       "name": "title",
       "showarrow": False,
       "text": title,
@@ -228,23 +237,21 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "yshift": space,
     }
 
-    # NOTE: Since `self.layout.annotations` is immutable,
-    # `self._layout["annotations"]` should be used.
-    if "annotations" in self._layout:
+    if "annotations" in self.layout:
 
       found = False
 
-      for annotation in self._layout["annotations"]:
-        if "name" in annotation and annotation["name"] == "title":
+      for annotation in self.layout.annotations:
+        if "name" in annotation and annotation.name == "title":
           found = True
-          annotation["text"] = title
-          annotation["yshift"] = space
+          annotation.text = title
+          annotation.yshift = space
 
       if not found:
-        self._layout["annotations"].append(title_layout)
+        self.layout.annotations += (title_layout,)
 
     else:
-      self._layout["annotations"] = [title_layout]
+      self.layout.annotations = (title_layout,)
 
   def set_axis_title(
     self, axis, name=None, char=None, unit=None):
@@ -259,49 +266,54 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     if name is None and char is None and unit is None:
       self._axis[axis].delete_layout("title")
     else:
-      title = str(name)
-
-      if char is not None:
-
-        for c in type(self).unitalicized:  # `1 < len(c)` is OK.
-          char = char.replace(c, "</i>{}<i>".format(c))
-
-        title += ", <i>{}</i>".format(char)
-
-      if unit is not None:
-        title += " [{}]".format(unit)
-
+      title = self._make_axis_title_string(name, char, unit)
       self._axis[axis].layout["title"] = title
 
   def set_x_title(self, name=None, char=None, unit=None):
     """
     Method wrapping `self.set_axis_title()`.
     """
-    if "grid" in self._layout:
+    if self.layout.grid.to_plotly_json():
       for subplot in self.layout.grid.subplots[-1]:
         self.set_axis_title(
-          subplot[:subplot.find("y")], name, char, unit)
+          subplot[:subplot.find("y")], "<span>\u0020</span>")
+      self._set_global_x_title(
+        self._make_axis_title_string(name, char, unit))
     else:
-      self.set_axis_title("x", name, char, unit)
+      xaxes = [k for k in self._axis.keys() if k.startswith("x")]
+      if len(xaxes) != 1:
+        print("Warning: Set title for 1/{} x axis".format(len(xaxes)))
+      self.set_axis_title(xaxes[0], name, char, unit)
 
   def set_y_title(self, name=None, char=None, unit=None):
     """
     Method wrapping `self.set_axis_title()`.
     """
-    if "grid" in self._layout:
+    if self.layout.grid.to_plotly_json():
       for subplot in [row[0] for row in self.layout.grid.subplots]:
         self.set_axis_title(
-          subplot[subplot.find("y"):], name, char, unit)
+          subplot[subplot.find("y"):], "<span>\u0020</span>")
+      self._set_global_y_title(
+        self._make_axis_title_string(name, char, unit))
     else:
-      self.set_axis_title("y", name, char, unit)
+      yaxes = [k for k in self._axis.keys() if k.startswith("y")]
+      if len(yaxes) != 1:
+        print("Warning: Set title for only 1/{} y axis".format(len(yaxes)))
+      self.set_axis_title(yaxes[0], name, char, unit)
 
   def clear_axis_title(self, direc="xy"):
     """
     Method to clear axis title.
     """
     for d in direc:
+
       for axis in (k for k in self._axis.keys() if k.startswith(d)):
         self.set_axis_title(axis)
+
+      if "annotations" in self.layout:
+        self.layout.annotations = tuple(
+          a for a in self.layout.annotations
+          if "name" not in a or a.name != d+"-title")
 
   def set_axis_range(self, axis, minimum=None, maximum=None):
     """
@@ -381,12 +393,6 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     if "yaxis" not in _layout:
       self._create_axis("y")
-
-  def _create_axis(self, axis, anchor=None):
-    """
-    Method to create an instance of MirroredAxisWithMinorTick.
-    """
-    self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout, anchor)
 
   # Layout -------------------------------------------------------------
 
@@ -528,12 +534,10 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     namepair_list = [
       *it.product(*(self._axis[axis].mirrors for axis in axis_pair)),
-      *it.product(*(self._axis[axis].minors for axis in axis_pair))
-    ]
+      *it.product(*(self._axis[axis].minors for axis in axis_pair))]
 
     for namepair in namepair_list:
-      dummy = callback()
-      dummy.update({
+      dummy = callback(**{
         "visible": False,
         **{"{}axis".format(name[0]): name for name in namepair}
       })
@@ -561,6 +565,13 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     if not any(share == s for s in ["", "x", "y", "xy"]):
       raise ValueError("Invalid shared axis setting: {}".format(share))
+
+    # clear all existing axes
+    self._axis.clear()
+    self._layout = {
+      k: v for k, v in self._layout.items()
+      if not re.search("^[xyz]axis\d*", k)
+    }
 
     counter = 0
     subplots = []
@@ -605,7 +616,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to make settings to align subplots.
     """
-    self._range_alignment = {}
+    self._range_alignment.clear()
 
     if "x" in align:
       master_axes = [pair[:pair.find("y")] for pair in subplots[0]]
@@ -693,24 +704,31 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       print("| {} |".format(" | ".join(
         format(s, "^{}s".format(maxlen)) for s in row)))
 
-  # Miscellaneous ------------------------------------------------------
+  # Axis Management ----------------------------------------------------
 
-  def _set_data(self, data):
+  def _create_axis(self, axis, anchor=None):
     """
-    Method to set `self.data`.
-    - `data` should be a list of trace instances.
+    Method to create an instance of MirroredAxisWithMinorTick.
     """
-    self.data = tuple()
+    self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout, anchor)
 
-    for d in data:
-      if isinstance(d, pltgo.Scatter):
-        self.add_scatter()
-        self.data[-1].update(d)
-      elif isinstance(d, pltgo.Heatmap):
-        self.add_heatmap()
-        self.data[-1].update(d)
-      else:
-        raise TypeError("Non supported data type: {}".format(type(d)))
+  def _make_axis_title_string(self, name, char=None, unit=None):
+    """
+    Method to make a title string.
+    """
+    title = str(name)
+
+    if char is not None:
+
+      for c in type(self).unitalicized:  # `1 < len(c)` is OK.
+        char = char.replace(c, "</i>{}<i>".format(c))
+
+      title += ", <i>{}</i>".format(char)
+
+    if unit is not None:
+      title += " [{}]".format(unit)
+
+    return title
 
   def _extend_axis_range(self, axis, minimum, maximum):
     """
@@ -741,6 +759,90 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       return 2*10**order, 4
     else:
       return 10**order, 5
+
+  def _set_global_x_title(self, title):
+    """
+    Method to set a title of x axis using `self.layout.annotations`.
+    This title is a global one for all subplots.
+    """
+    title_layout = {
+      "font": self.layout.titlefont.to_plotly_json(),
+      "name": "x-title",
+      "showarrow": False,
+      "text": title,
+      "x": 0.5,
+      "xanchor": "center",
+      "xref": "paper",
+      "y": 0.0,
+      "yanchor": "bottom",
+      "yref": "paper",
+    }
+
+    if "annotations" in self.layout:
+
+      found = False
+
+      for annotation in self.layout.annotations:
+        if "name" in annotation and annotation.name == "x-title":
+          found = True
+          annotation.text = title
+
+      if not found:
+        self.layout.annotations += (title_layout,)
+
+    else:
+      self.layout.annotations = (title_layout,)
+
+  def _set_global_y_title(self, title):
+    """
+    Method to set a title of y axis using `self.layout.annotations`.
+    This title is a global one for all subplots.
+    """
+    title_layout = {
+      "font": self.layout.titlefont.to_plotly_json(),
+      "name": "y-title",
+      "showarrow": False,
+      "text": title,
+      "textangle": -90,
+      "x": 0.0,
+      "xanchor": "left",
+      "xref": "paper",
+      "y": 0.5,
+      "yanchor": "middle",
+      "yref": "paper",
+    }
+
+    if "annotations" in self.layout:
+
+      found = False
+
+      for annotation in self.layout.annotations:
+        if "name" in annotation and annotation.name == "y-title":
+          found = True
+          annotation.text = title
+
+      if not found:
+        self.layout.annotations += (title_layout,)
+
+    else:
+      self.layout.annotations = (title_layout,)
+
+  # Miscellaneous ------------------------------------------------------
+
+  def _set_data(self, data):
+    """
+    Method to set `self.data`.
+    - `data` should be a list of trace instances.
+    """
+    self.data = tuple()
+
+    for d in data:
+      if isinstance(d, pltgo.Scatter):
+        self.add_scatter(**d)
+      elif isinstance(d, pltgo.Heatmap):
+        self.add_heatmap(**d)
+      else:
+        raise TypeError("Non supported data type: {}".format(type(d)))
 
 #=======================================================================
 
