@@ -8,4 +8,4 @@ dist/
 examples/*.html
 mynotes/
 
-tmp.*
+examples/tmp*

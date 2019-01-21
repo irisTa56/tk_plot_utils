@@ -164,24 +164,14 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       - `align={'col': 'all'}` leads to that initial range of all 'x*'
       axes will be aligned.
     """
-    subplots, trace_list = self._subplots(trace_array, share)
+    trace_list = self._make_subplots(trace_array, share, **kwargs)
 
     if align:
-      self._subplots_range_alignment(subplots, align)
-
-    self.layout.grid = {
-      "subplots": subplots,
-      **kwargs
-    }
-
-    self._has_subplots = True
-
-    if "x" in share:
-      self.layout.grid.xgap = 0.1
-    if "y" in share:
-      self.layout.grid.ygap = 0.1
+      self._subplots_range_alignment(align)
 
     self._set_data(trace_list)
+
+    self._has_subplots = True
 
   def set_legend(
     self, position=None, padding=10, xpad=None, ypad=None, **kwargs):
@@ -260,6 +250,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       self.layout.annotations = (title_layout,)
 
+  # Axis Management ----------------------------------------------------
+
   def set_axis_title(
     self, axis, name=None, char=None, unit=None):
     """
@@ -284,9 +276,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method wrapping `self.set_axis_title()`.
     """
     if self._has_subplots:
-      for subplot in self.layout.grid.subplots[-1]:
-        self.set_axis_title(
-          subplot[:subplot.find("y")], "<span>\u0020</span>")
+      for subplot in self._grid_ref[-1]:
+        self.set_axis_title(subplot[0], "<span>\u0020</span>")
       self._set_global_x_title(
         self._make_axis_title_string(name, char, unit))
     else:
@@ -300,9 +291,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method wrapping `self.set_axis_title()`.
     """
     if self._has_subplots:
-      for subplot in [row[0] for row in self.layout.grid.subplots]:
-        self.set_axis_title(
-          subplot[subplot.find("y"):], "<span>\u0020</span>")
+      for subplot in [row[0] for row in self._grid_ref]:
+        self.set_axis_title(subplot[1], "<span>\u0020</span>")
       self._set_global_y_title(
         self._make_axis_title_string(name, char, unit))
     else:
@@ -575,23 +565,34 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
   # Subplots -----------------------------------------------------------
 
-  def _make_subplots(self, trace_array, **kwargs):
+  def _make_subplots(self, trace_array, share, **kwargs):
     """
     Method to make subplots using `plotly.tools.make_subplots()`.
     """
-    specs = []
+    self._clear_axes()
+
+    kwargs["shared_xaxes"] = "x" in share
+    kwargs["shared_yaxes"] = "y" in share
+
     if "specs" in kwargs:
-      specs = kwargs["specs"]
-      del kwargs["specs"]
-      if not self._compare_grid(specs, trace_array):
+      if not self._compare_grid(kwargs["specs"], trace_array):
         raise RuntimeError("Shape of specs differs from that of trace array")
     else:
-      for row in trace_array:
-        specs.append([{} if cell else None for cell in row])
+      kwargs["specs"] = [
+        [{} if cell else None for cell in row] for row in trace_array]
 
-    n_row, n_col = self._get_grid_shape(specs)
+    n_row, n_col = self._get_grid_shape(kwargs["specs"])
 
-    fig = tools.make_subplots(rows=n_row, cols=n_col, specs=specs, **kwargs)
+    kwargs["horizontal_spacing"] = (
+      0.1 if kwargs["shared_yaxes"] else 0.2) / n_col
+    kwargs["vertical_spacing"] = (
+      0.1 if kwargs["shared_xaxes"] else 0.3) / n_row
+
+    fig = tools.make_subplots(rows=n_row, cols=n_col, **kwargs)
+    axis_layouts = {
+      k.replace("axis", ""): v
+      for k, v in fig._layout.items() if re.search("^[xyz]axis\d*", k)
+    }
 
     # convert x1/y1 to x/y
     self._grid_ref = [
@@ -602,18 +603,32 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       for row in fig._grid_ref
     ]
 
-    self._clear_axes()
-
     flatten_array = []
 
-    for row1, row2 in zip(trace_array, self._grid_ref):
+    # loop from bottom
+    for row1, row2 in zip(trace_array[::-1], self._grid_ref[::-1]):
+      flatten_row = []
       for cell, axis_pair in zip(row1, row2):
-
         if cell is None: continue
 
         for trace in cell if isinstance(cell, (list, tuple)) else [cell]:
           trace.xaxis, trace.yaxis = axis_pair
-          flatten_array.append(trace)
+          flatten_row.append(trace)
+
+        for axis, opposite in [axis_pair, axis_pair[::-1]]:
+          tmp_layout = cp.deepcopy(axis_layouts[axis])
+          # NOTE: Official tools.make_subplots() uses 'free' as anchor.
+          # Will something wrong occur by assigning opposite axis as anchor?
+          tmp_layout["anchor"] = opposite
+          if axis not in self._axes:
+            self._create_axis(axis, **tmp_layout)
+          else:
+            self._axes[axis].append_mirror_axis(self._layout, **tmp_layout)
+            self._axes[axis].append_minor_axis(self._layout, **tmp_layout)
+
+      flatten_array = flatten_row + flatten_array
+
+    return flatten_array
 
   def _compare_grid(self, grid1, grid2):
     """
@@ -637,99 +652,41 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     return n_row, n_col
 
-  def _subplots(self, trace_array, share=""):
-    """
-    Method to make subplots arrangement from an array of trances.
-    """
-    if not any(share == s for s in ["", "x", "y", "xy"]):
-      raise ValueError("Invalid shared axis setting: {}".format(share))
-
-    # clear all existing axes
-    self._axes.clear()
-    self._layout = {
-      k: v for k, v in self._layout.items()
-      if not re.search("^[xyz]axis\d*", k)
-    }
-
-    counter = 0
-    subplots = []
-    flatten_array = []
-
-    for irow, row in enumerate(trace_array):
-
-      subplots_row = []
-
-      for icol, cell in enumerate(row):
-
-        counter += 1
-
-        xindex = icol+1 if "x" in share else counter
-        xsuffix = str(xindex) if 1 < xindex else ""
-        yindex = irow+1 if "y" in share else counter
-        ysuffix = str(yindex) if 1 < yindex else ""
-        pair = ("x"+xsuffix, "y"+ysuffix)
-
-        for trace in cell if isinstance(cell, (list, tuple)) else [cell]:
-          trace.xaxis, trace.yaxis = pair
-          flatten_array.append(trace)
-
-        for axis, opposite in [pair, pair[::-1]]:
-          if axis not in self._axes:
-            self._create_axis(axis, anchor=opposite)
-          elif axis[0] in share:
-            self._axes[axis].append_mirror_axis(self._layout, anchor=opposite)
-            self._axes[axis].append_minor_axis(self._layout, anchor=opposite)
-
-        subplots_row.append(pair)
-
-      subplots.append(subplots_row)
-
-    subplots = [["".join(pair) for pair in row] for row in subplots]
-
-    self._show_subplot_grid(subplots)
-
-    return subplots, flatten_array
-
-  def _subplots_range_alignment(self, subplots, align):
+  def _subplots_range_alignment(self, align):
     """
     Method to make settings to align subplots.
     """
     self._range_alignment.clear()
 
     if "x" in align:
-      master_axes = [pair[:pair.find("y")] for pair in subplots[0]]
+      master_axes = [pair[0] for pair in self._grid_ref[0]]
 
       if align["x"] == "each":
-        for row in subplots:
+        for row in self._grid_ref:
           for icol, pair in enumerate(row):
-            axis = pair[:pair.find("y")]
-            self._append_range_alignment(master_axes[icol], axis)
+            self._append_range_alignment(master_axes[icol], pair[0])
 
       elif align["x"] == "all":
-        for row in subplots:
+        for row in self._grid_ref:
           for pair in row:
-            axis = pair[:pair.find("y")]
-            self._append_range_alignment(master_axes[0], axis)
+            self._append_range_alignment(master_axes[0], pair[0])
 
       else:
         raise RuntimeError(
           "Invalid align scheme for x: {}".format(align["x"]))
 
     if "y" in align:
-      master_axes = [
-        pair[pair.find("y"):] for pair in [row[0] for row in subplots]]
+      master_axes = [pair[1] for pair in [row[0] for row in self._grid_ref]]
 
       if align["y"] == "each":
-        for irow, row in enumerate(subplots):
+        for irow, row in enumerate(self._grid_ref):
           for pair in row:
-            axis = pair[pair.find("y"):]
-            self._append_range_alignment(master_axes[irow], axis)
+            self._append_range_alignment(master_axes[irow], pair[1])
 
       elif align["y"] == "all":
-        for row in subplots:
+        for row in self._grid_ref:
           for pair in row:
-            axis = pair[pair.find("y"):]
-            self._append_range_alignment(master_axes[0], axis)
+            self._append_range_alignment(master_axes[0], pair[1])
 
       else:
         raise RuntimeError(
