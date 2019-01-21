@@ -68,7 +68,7 @@ def make_heatmap(data, **kwargs):
     elif not ("x" in d and "y" in d):
       raise RuntimeError("Either 'origin' or 'x' and 'y' are required")
 
-    return [pltgo.Heatmap(d) for d in data]
+  return [pltgo.Heatmap(d) for d in data]
 
 #=======================================================================
 

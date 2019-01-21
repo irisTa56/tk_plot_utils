@@ -36,5 +36,6 @@ This project would not be possible without the following great open-source proje
 
 ## To Do
 
+* Use `plotly.tools.make_subplots()` to prepare subplots?
 * Serial number (alphabet) for subplots
 * Documentation
