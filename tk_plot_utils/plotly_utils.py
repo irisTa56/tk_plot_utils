@@ -6,6 +6,8 @@ import collections as co
 
 from datetime import datetime
 
+from plotly import tools
+
 from .plotly_html import  plt, pltgo, postprocess_by_js
 from .utility_functions import merged_dict
 
@@ -268,14 +270,14 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     if len(axis) == 2 and axis[1] == "1":
       axis = axis[0]
 
-    if axis not in self._axis:
+    if axis not in self._axes:
       self._create_axis(axis)
 
     if name is None and char is None and unit is None:
-      self._axis[axis].delete_layout("title")
+      self._axes[axis].delete_layout("title")
     else:
       title = self._make_axis_title_string(name, char, unit)
-      self._axis[axis].layout["title"] = title
+      self._axes[axis].layout["title"] = title
 
   def set_x_title(self, name=None, char=None, unit=None):
     """
@@ -288,7 +290,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       self._set_global_x_title(
         self._make_axis_title_string(name, char, unit))
     else:
-      xaxes = [k for k in self._axis.keys() if k.startswith("x")]
+      xaxes = [k for k in self._axes.keys() if k.startswith("x")]
       if len(xaxes) != 1:
         print("Warning: Set title for 1/{} x axis".format(len(xaxes)))
       self.set_axis_title(xaxes[0], name, char, unit)
@@ -304,7 +306,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       self._set_global_y_title(
         self._make_axis_title_string(name, char, unit))
     else:
-      yaxes = [k for k in self._axis.keys() if k.startswith("y")]
+      yaxes = [k for k in self._axes.keys() if k.startswith("y")]
       if len(yaxes) != 1:
         print("Warning: Set title for only 1/{} y axis".format(len(yaxes)))
       self.set_axis_title(yaxes[0], name, char, unit)
@@ -313,12 +315,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to clear axis title.
     """
-    if len(axis) == 2 and axis[1] == "1":
-      axis = axis[0]
-
     for d in direc:
 
-      for axis in (k for k in self._axis.keys() if k.startswith(d)):
+      for axis in (k for k in self._axes.keys() if k.startswith(d)):
         self.set_axis_title(axis)
 
       if "annotations" in self.layout:
@@ -330,26 +329,29 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to set range of an axis.
     """
-    if axis not in self._axis:
+    if len(axis) == 2 and axis[1] == "1":
+      axis = axis[0]
+
+    if axis not in self._axes:
       self._create_axis(axis)
 
     if minimum is None or maximum is None:
-      self._axis[axis].delete_layout("range")
+      self._axes[axis].delete_layout("range")
     else:
-      self._axis[axis].set_layout("range", [minimum, maximum])
+      self._axes[axis].set_layout("range", [minimum, maximum])
 
   def set_x_range(self, minimum=None, maximum=None):
     """
     Method wrapping `self.set_axis_range()`.
     """
-    for axis in (k for k in self._axis.keys() if k.startswith("x")):
+    for axis in (k for k in self._axes.keys() if k.startswith("x")):
       self.set_axis_range(axis, minimum, maximum)
 
   def set_y_range(self, minimum=None, maximum=None):
     """
     Method wrapping `self.set_axis_range()`.
     """
-    for axis in (k for k in self._axis.keys() if k.startswith("y")):
+    for axis in (k for k in self._axes.keys() if k.startswith("y")):
       self.set_axis_range(axis, minimum, maximum)
 
   def set_axis_ticks(self, axis, interval, num_minor=5):
@@ -361,24 +363,24 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     if len(axis) == 2 and axis[1] == "1":
       axis = axis[0]
 
-    if axis not in self._axis:
+    if axis not in self._axes:
       self._create_axis(axis)
 
-    self._axis[axis].set_layout(
+    self._axes[axis].set_layout(
       "dtick", interval, minor_val=interval/num_minor)
 
   def set_x_ticks(self, interval, num_minor=5):
     """
     Method wrapping `self.set_axis_ticks()`.
     """
-    for axis in (k for k in self._axis.keys() if k.startswith("x")):
+    for axis in (k for k in self._axes.keys() if k.startswith("x")):
       self.set_axis_ticks(axis, interval, num_minor)
 
   def set_y_ticks(self, interval, num_minor=5):
     """
     Method wrapping `self.set_axis_ticks()`.
     """
-    for axis in (k for k in self._axis.keys() if k.startswith("y")):
+    for axis in (k for k in self._axes.keys() if k.startswith("y")):
       self.set_axis_ticks(axis, interval, num_minor)
 
   # Private Methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -396,7 +398,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to initialize settings for axis.
     """
-    self._axis = {}
+    self._axes = {}
 
     for k in _layout.keys():
       if re.search("^[xyz]axis\d*", k):
@@ -444,7 +446,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         scatter.yaxis if scatter.yaxis else "y")
 
       for axis in axis_pair:
-        if axis not in self._axis:
+        if axis not in self._axes:
           self._create_axis(axis)
 
       dct[axis_pair].append(scatter)
@@ -452,11 +454,11 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     # setting for each axis
 
     skip_range_setting = {
-      k: v.in_layout("range") for k, v in self._axis.items()
+      k: v.in_layout("range") for k, v in self._axes.items()
     }
 
     skip_ticks_setting = {
-      k: v.in_layout("dtick") for k, v in self._axis.items()
+      k: v.in_layout("dtick") for k, v in self._axes.items()
     }
 
     for axis_pair, scatters in dct.items():
@@ -472,7 +474,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
         if not skip_ticks_setting[axis]:
           self.set_axis_ticks(
-            axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
+            axis, *self._auto_axis_ticks(self._axes[axis].layout["range"]))
 
       self._add_dummy_traces(axis_pair, self.add_scatter)
 
@@ -497,7 +499,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         if axis in dct:
           raise RuntimeError(
             "{} is already used by {}".format(axis, dct[axis]))
-        if axis not in self._axis:
+        if axis not in self._axes:
           self._create_axis(axis)
 
       dct[axis_pair] = heatmap
@@ -505,11 +507,11 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     # setting for each axis
 
     skip_range_setting = {
-      k: v.in_layout("range") for k, v in self._axis.items()
+      k: v.in_layout("range") for k, v in self._axes.items()
     }
 
     skip_ticks_setting = {
-      k: v.in_layout("dtick") for k, v in self._axis.items()
+      k: v.in_layout("dtick") for k, v in self._axes.items()
     }
 
     for axis_pair, heatmap in dct.items():
@@ -528,12 +530,12 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
         if not skip_ticks_setting[axis]:
           self.set_axis_ticks(
-            axis, *self._auto_axis_ticks(self._axis[axis].layout["range"]))
+            axis, *self._auto_axis_ticks(self._axes[axis].layout["range"]))
 
-        self._axis[axis].set_layout("ticks", "outside")
-        self._axis[axis].set_layout("constrain", "domain")
+        self._axes[axis].set_layout("ticks", "outside")
+        self._axes[axis].set_layout("constrain", "domain")
 
-      self._axis[axis_pair[1]].layout["scaleanchor"] = axis_pair[0]
+      self._axes[axis_pair[1]].layout["scaleanchor"] = axis_pair[0]
 
       self._add_dummy_traces(axis_pair, self.add_heatmap)
 
@@ -547,8 +549,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method to add dummy trances required to show mirror and minor ticks.
     """
     namepair_list = [
-      *it.product(*(self._axis[axis].mirrors for axis in axis_pair)),
-      *it.product(*(self._axis[axis].minors for axis in axis_pair))]
+      *it.product(*(self._axes[axis].mirrors for axis in axis_pair)),
+      *it.product(*(self._axes[axis].minors for axis in axis_pair))]
 
     for namepair in namepair_list:
       dummy = callback(**{
@@ -573,6 +575,68 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
   # Subplots -----------------------------------------------------------
 
+  def _make_subplots(self, trace_array, **kwargs):
+    """
+    Method to make subplots using `plotly.tools.make_subplots()`.
+    """
+    specs = []
+    if "specs" in kwargs:
+      specs = kwargs["specs"]
+      del kwargs["specs"]
+      if not self._compare_grid(specs, trace_array):
+        raise RuntimeError("Shape of specs differs from that of trace array")
+    else:
+      for row in trace_array:
+        specs.append([{} if cell else None for cell in row])
+
+    n_row, n_col = self._get_grid_shape(specs)
+
+    fig = tools.make_subplots(rows=n_row, cols=n_col, specs=specs, **kwargs)
+
+    # convert x1/y1 to x/y
+    self._grid_ref = [
+      [
+        tuple(a[0] if a[1:] == "1" else a for a in cell)
+        if cell else None for cell in row
+      ]
+      for row in fig._grid_ref
+    ]
+
+    self._clear_axes()
+
+    flatten_array = []
+
+    for row1, row2 in zip(trace_array, self._grid_ref):
+      for cell, axis_pair in zip(row1, row2):
+
+        if cell is None: continue
+
+        for trace in cell if isinstance(cell, (list, tuple)) else [cell]:
+          trace.xaxis, trace.yaxis = axis_pair
+          flatten_array.append(trace)
+
+  def _compare_grid(self, grid1, grid2):
+    """
+    Compare shapes of two grids, and return True if they are equivalent.
+    """
+    for row1, row2 in zip(grid1, grid2):
+      for cell1, cell2 in zip(row1, row2):
+        if (cell1 is None) != (cell2 is None):
+          return False
+    return True
+
+  def _get_grid_shape(self, grid):
+    """
+    Check shape of the given `grid`, and return the number of its rows
+    and columns.
+    """
+    n_row = len(grid)
+    n_col = len(grid[0])
+    if not all(len(row) == n_col for row in grid):
+      raise RuntimeError("Invalid shape of subplot grid")
+
+    return n_row, n_col
+
   def _subplots(self, trace_array, share=""):
     """
     Method to make subplots arrangement from an array of trances.
@@ -581,7 +645,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       raise ValueError("Invalid shared axis setting: {}".format(share))
 
     # clear all existing axes
-    self._axis.clear()
+    self._axes.clear()
     self._layout = {
       k: v for k, v in self._layout.items()
       if not re.search("^[xyz]axis\d*", k)
@@ -610,11 +674,11 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           flatten_array.append(trace)
 
         for axis, opposite in [pair, pair[::-1]]:
-          if axis not in self._axis:
-            self._create_axis(axis, opposite)
+          if axis not in self._axes:
+            self._create_axis(axis, anchor=opposite)
           elif axis[0] in share:
-            self._axis[axis].append_mirror_axis(self._layout, opposite)
-            self._axis[axis].append_minor_axis(self._layout, opposite)
+            self._axes[axis].append_mirror_axis(self._layout, anchor=opposite)
+            self._axes[axis].append_minor_axis(self._layout, anchor=opposite)
 
         subplots_row.append(pair)
 
@@ -678,11 +742,11 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method to align axis range of subplots.
     """
     for k, v in self._range_alignment.items():
-      minimum = min(self._axis[axis].layout["range"][0] for axis in v)
-      maximum = max(self._axis[axis].layout["range"][1] for axis in v)
+      minimum = min(self._axes[axis].layout["range"][0] for axis in v)
+      maximum = max(self._axes[axis].layout["range"][1] for axis in v)
       self.set_axis_range(k, minimum, maximum)
       self.set_axis_ticks(
-        k, *self._auto_axis_ticks(self._axis[k].layout["range"]))
+        k, *self._auto_axis_ticks(self._axes[k].layout["range"]))
 
   def _append_range_alignment(self, master, axis):
     """
@@ -720,11 +784,21 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
   # Axis Management ----------------------------------------------------
 
-  def _create_axis(self, axis, anchor=None):
+  def _create_axis(self, axis, **kwargs):
     """
     Method to create an instance of MirroredAxisWithMinorTick.
     """
-    self._axis[axis] = MirroredAxisWithMinorTick(axis, self._layout, anchor)
+    self._axes[axis] = MirroredAxisWithMinorTick(axis, self._layout, **kwargs)
+
+  def _clear_axes(self):
+    """
+    Remove all axis layouts.
+    """
+    self._axes.clear()
+    axis_layout_keys = [
+      k for k in self._layout.keys() if re.search("^[xyz]axis\d*$", k)]
+    for k in axis_layout_keys:
+      del self._layout[k]
 
   def _make_axis_title_string(self, name, char=None, unit=None):
     """
@@ -749,11 +823,11 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method to extend range of the given axis. If the range has not
     been set yet, `minimum` and `maximum` will be set as it is.
     """
-    if self._axis[axis].in_layout("range"):
+    if self._axes[axis].in_layout("range"):
       self.set_axis_range(
         axis,
-        min(minimum, self._axis[axis].layout["range"][0]),
-        max(maximum, self._axis[axis].layout["range"][1]))
+        min(minimum, self._axes[axis].layout["range"][0]),
+        max(maximum, self._axes[axis].layout["range"][1]))
     else:
       self.set_axis_range(axis, minimum, maximum)
 
@@ -894,7 +968,7 @@ class MirroredAxisWithMinorTick:
   opposite = {"x": "y", "y": "x"}
   mirror_side = {"x": "top", "y": "right"}
 
-  def __init__(self, axis, parent_layout, anchor=None, *args, **kwargs):
+  def __init__(self, axis, parent_layout, **kwargs):
     """
     Initializer of MirroredAxisWithMinorTick class.
     Note that `self.layout` of this class is NOT an instance of
@@ -916,16 +990,18 @@ class MirroredAxisWithMinorTick:
     if self.direc == "y":
       self.layout["ticksuffix"] = "\u2009"
 
+    if "anchor" not in kwargs:
+      kwargs["anchor"] = type(self).opposite[self.direc] + self.name[1:]
+
+    self.layout.update(**kwargs)
+
     self.mirrors = []
     self.minors = []
     self._mirror_layouts = []
     self._minor_layouts = []
 
-    if not anchor:
-      anchor = type(self).opposite[self.direc] + self.name[1:]
-
-    self.append_mirror_axis(parent_layout, anchor)
-    self.append_minor_axis(parent_layout, anchor)
+    self.append_mirror_axis(parent_layout, **kwargs)
+    self.append_minor_axis(parent_layout, **kwargs)
 
   def delete_layout(self, key):
     if key in self.layout:
@@ -938,18 +1014,20 @@ class MirroredAxisWithMinorTick:
         del minor_layout[key]
 
   def set_layout(self, key, val, mirror_val=None, minor_val=None):
+    if mirror_val is None: mirror_val = val
+    if minor_val is None: minor_val = val
     self.layout[key] = val
     for mirror_layout in self._mirror_layouts:
-      mirror_layout[key] = val if mirror_val is None else mirror_val
+      mirror_layout[key] = mirror_val
     for minor_layout in self._minor_layouts:
-      minor_layout[key] = val if minor_val is None else minor_val
+      minor_layout[key] = minor_val
 
   def in_layout(self, key):
     return all(
       key in layout for layout in [
         self.layout, *self._mirror_layouts, *self._minor_layouts])
 
-  def append_mirror_axis(self, parent_layout, anchor):
+  def append_mirror_axis(self, parent_layout, **kwargs):
 
     mirror_index = 100 * (2*len(self._mirror_layouts)+1) + self.index
 
@@ -959,7 +1037,6 @@ class MirroredAxisWithMinorTick:
       type(self).mirror_default_layout, parent_layout[mirror_layout_key]
       if mirror_layout_key in parent_layout else {})
 
-    mirror_layout["anchor"] = anchor
     mirror_layout["overlaying"] = self.name
     mirror_layout["scaleanchor"] = self.name
 
@@ -974,10 +1051,12 @@ class MirroredAxisWithMinorTick:
       else:
         mirror_layout["side"] = type(self).mirror_side[self.direc]
 
+    mirror_layout.update(**kwargs)
+
     self.mirrors.append("{}{}".format(self.direc, mirror_index))
     self._mirror_layouts.append(mirror_layout)
 
-  def append_minor_axis(self, parent_layout, anchor):
+  def append_minor_axis(self, parent_layout, **kwargs):
 
     minor_index = 100 * (2*len(self._minor_layouts)+2) + self.index
 
@@ -987,9 +1066,10 @@ class MirroredAxisWithMinorTick:
       type(self).minor_default_layout, parent_layout[minor_layout_key]
       if minor_layout_key in parent_layout else {})
 
-    minor_layout["anchor"] = anchor
     minor_layout["overlaying"] = self.name
     minor_layout["scaleanchor"] = self.name
+
+    minor_layout.update(**kwargs)
 
     self.minors.append("{}{}".format(self.direc, minor_index))
     self._minor_layouts.append(minor_layout)
