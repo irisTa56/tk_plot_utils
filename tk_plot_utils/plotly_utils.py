@@ -145,7 +145,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     if "annotations" in self.layout:
       dct = {
         a["name"]: i for i, a in enumerate(self.layout.annotations)
-        if "name" in a and a.name.endswith("-title")
+        if isinstance(a.name, str) and a.name.endswith("-title")
       }
       postprocess_by_js(
         dct["x-title"] if "x-title" in dct else None,
@@ -391,7 +391,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     self._axes = {}
 
     for k in _layout.keys():
-      if re.search("^[xyz]axis\d*", k):
+      if re.search("^[xyz]axis\d*$", k):
         self._create_axis(k.replace("axis", ""))
 
     if "xaxis" not in _layout:
@@ -589,10 +589,21 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       0.1 if kwargs["shared_xaxes"] else 0.3) / n_row
 
     fig = tools.make_subplots(rows=n_row, cols=n_col, **kwargs)
+
+    # store axis layout of created Figure instance
     axis_layouts = {
       k.replace("axis", ""): v
-      for k, v in fig._layout.items() if re.search("^[xyz]axis\d*", k)
+      for k, v in fig._layout.items() if re.search("^[xyz]axis\d*$", k)
     }
+
+    # set subplot titles
+    if "annotations" in fig.layout:
+      for annotation in fig.layout.annotations:
+        annotation["font"] = self.layout.titlefont.to_plotly_json()
+      if "annotations" in self.layout:
+        self.layout.annotations += fig.layout.annotations
+      else:
+        self.layout.annotations = fig.layout.annotations
 
     # convert x1/y1 to x/y
     self._grid_ref = [
