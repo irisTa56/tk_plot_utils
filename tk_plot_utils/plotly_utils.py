@@ -8,7 +8,7 @@ from datetime import datetime
 
 from plotly import tools
 
-from .plotly_html import  plt, pltgo, postprocess_by_js
+from .plotly_html import  plt, pltgo, override
 from .utility_functions import merged_dict
 
 #=======================================================================
@@ -138,20 +138,18 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     auto_kwargs.update(kwargs)
 
-    plt.iplot(self, **auto_kwargs, **kwargs)
+    dct = {
+      a["name"]: i for i, a in enumerate(self.layout.annotations)
+      if isinstance(a.name, str) and a.name.endswith("-title")
+    } if "annotations" in self.layout else {}
+
+    override(
+      dct["x-title"] if "x-title" in dct else None,
+      dct["y-title"] if "y-title" in dct else None)
+
+    plt.iplot(self, **auto_kwargs)
 
     self._clear_dummy_traces()
-
-    if "annotations" in self.layout:
-      dct = {
-        a["name"]: i for i, a in enumerate(self.layout.annotations)
-        if isinstance(a.name, str) and a.name.endswith("-title")
-      }
-      postprocess_by_js(
-        dct["x-title"] if "x-title" in dct else None,
-        dct["y-title"] if "y-title" in dct else None)
-    else:
-      postprocess_by_js()
 
   def subplots(
     self, trace_array, share="", align={}, **kwargs):
@@ -319,30 +317,16 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to set range of an axis.
     """
-    if len(axis) == 2 and axis[1] == "1":
-      axis = axis[0]
-
-    if axis not in self._axes:
-      self._create_axis(axis)
-
-    if minimum is None or maximum is None:
+    if axis in self._axes and minimum is None or maximum is None:
       self._axes[axis].delete_layout("range")
     else:
-      self._axes[axis].set_layout("range", [minimum, maximum])
+      self.set_axis_layout(axis, "range", [minimum, maximum])
 
   def set_x_range(self, minimum=None, maximum=None):
-    """
-    Method wrapping `self.set_axis_range()`.
-    """
-    for axis in (k for k in self._axes.keys() if k.startswith("x")):
-      self.set_axis_range(axis, minimum, maximum)
+    self.set_axis_range("x\d*", minimum, maximum)
 
   def set_y_range(self, minimum=None, maximum=None):
-    """
-    Method wrapping `self.set_axis_range()`.
-    """
-    for axis in (k for k in self._axes.keys() if k.startswith("y")):
-      self.set_axis_range(axis, minimum, maximum)
+    self.set_axis_range("y\d*", minimum, maximum)
 
   def set_axis_ticks(self, axis, interval, num_minor=5):
     """
@@ -350,28 +334,30 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     - `interval`: distance between two consecutive major ticks.
     - `num_minor`: # of minor ticks per major tick.
     """
-    if len(axis) == 2 and axis[1] == "1":
-      axis = axis[0]
-
-    if axis not in self._axes:
-      self._create_axis(axis)
-
-    self._axes[axis].set_layout(
-      "dtick", interval, minor_val=interval/num_minor)
+    self.set_axis_layout(
+      axis, "dtick", interval, minor_val=interval/num_minor)
 
   def set_x_ticks(self, interval, num_minor=5):
-    """
-    Method wrapping `self.set_axis_ticks()`.
-    """
-    for axis in (k for k in self._axes.keys() if k.startswith("x")):
-      self.set_axis_ticks(axis, interval, num_minor)
+    self.set_axis_ticks("x\d*", interval, num_minor)
 
   def set_y_ticks(self, interval, num_minor=5):
+    self.set_axis_ticks("y\d*", interval, num_minor)
+
+  def set_axis_layout(self, axis, key, value, **kwargs):
     """
-    Method wrapping `self.set_axis_ticks()`.
+    Set axis layout. `axis` can be a regular expression.
     """
-    for axis in (k for k in self._axes.keys() if k.startswith("y")):
-      self.set_axis_ticks(axis, interval, num_minor)
+    if re.match("[xyz]\d*$", axis):
+      if len(axis) == 2 and axis[1] == "1":  # x1/y1 should be x/y
+        axis = axis[0]
+      if axis not in self._axes:
+        self._create_axis(axis)
+        print("New axis has been created: {}".format(axis))
+      self._axes[axis].set_layout(key, value, **kwargs)
+    else:
+      for k, v in self._axes.items():
+        if re.match(axis, k):
+          v.set_layout(key, value, **kwargs)
 
   # Private Methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -391,7 +377,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     self._axes = {}
 
     for k in _layout.keys():
-      if re.search("^[xyz]axis\d*$", k):
+      if re.match("[xyz]axis\d*$", k):
         self._create_axis(k.replace("axis", ""))
 
     if "xaxis" not in _layout:
@@ -593,7 +579,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     # store axis layout of created Figure instance
     axis_layouts = {
       k.replace("axis", ""): v
-      for k, v in fig._layout.items() if re.search("^[xyz]axis\d*$", k)
+      for k, v in fig._layout.items() if re.match("[xyz]axis\d*$", k)
     }
 
     # set subplot titles
@@ -764,7 +750,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     self._axes.clear()
     axis_layout_keys = [
-      k for k in self._layout.keys() if re.search("^[xyz]axis\d*$", k)]
+      k for k in self._layout.keys() if re.match("[xyz]axis\d*$", k)]
     for k in axis_layout_keys:
       del self._layout[k]
 

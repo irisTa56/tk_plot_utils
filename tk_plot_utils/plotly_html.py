@@ -134,56 +134,78 @@ download_html = """\
 </button>
 """
 
-# store id of current plot
-download_html += """\
+disable_html = """\
 <script>
-  var current_divid = "{plot_id}";
-</script>
-"""
-
-get_image_download_script_original = pltoff.get_image_download_script
-
-def get_image_download_script_override(caller):
-  """
-  This function overrides `plotly.offline.offline.get_image_download_script`.
-  """
-  if caller == "plot":
-    return get_image_download_script_original(caller)
-  elif caller != "iplot":
-    raise ValueError("caller should only be one of `iplot` or `plot`")
-
-  return download_html
-
-pltoff.get_image_download_script = get_image_download_script_override
-
-# ----------------------------------------------------------------------
-
-
-inject_html = """\
-<script>
-  hide_draggable_elements(current_divid);
-  remove_autoscale_button(current_divid);
+  if (window.Jupyter)
+  {{
+    hide_draggable_elements("{plot_id}");
+    remove_autoscale_button("{plot_id}");
+  }}
+  else
+  {{
+    window.addEventListener("load", () =>
+    {{
+      hide_draggable_elements("{plot_id}");
+      remove_autoscale_button("{plot_id}");
+    }});
+  }}
 </script>
 """
 
 # shift x title for subplots
 xtitle_html = """\
 <script>
-  shift_subplots_xtitle(current_divid, {});
+  if (window.Jupyter)
+  {{{{
+    shift_subplots_xtitle("{{plot_id}}", {0});
+  }}}}
+  else
+  {{{{
+    window.addEventListener("load", () =>
+    {{{{
+      shift_subplots_xtitle("{{plot_id}}", {0});
+    }}}});
+  }}}}
 </script>
 """
 
 # shift x title for subplots
 ytitle_html = """\
 <script>
-  shift_subplots_ytitle(current_divid, {});
+  if (window.Jupyter)
+  {{{{
+    shift_subplots_ytitle("{{plot_id}}", {0});
+  }}}}
+  else
+  {{{{
+    window.addEventListener("load", () =>
+    {{{{
+      shift_subplots_ytitle("{{plot_id}}", {0});
+    }}}});
+  }}}}
 </script>
 """
 
-def postprocess_by_js(xtitle_index=None, ytitle_index=None):
-  extra_html = ""
+get_image_download_script_original = pltoff.get_image_download_script
+
+def override(xtitle_index=None, ytitle_index=None):
+
+  inject_html = download_html + disable_html
+
   if xtitle_index is not None:
-    extra_html += xtitle_html.format(xtitle_index)
+    inject_html += xtitle_html.format(xtitle_index)
   if ytitle_index is not None:
-    extra_html += ytitle_html.format(ytitle_index)
-  ipd.display(ipd.HTML(inject_html+extra_html))
+    inject_html += ytitle_html.format(ytitle_index)
+
+  def get_image_download_script_override(caller):
+    """
+    This function overrides `plotly.offline.offline.get_image_download_script`.
+    """
+    if caller == "plot":
+      return get_image_download_script_original(caller)
+    elif caller != "iplot":
+      raise ValueError("caller should only be one of `iplot` or `plot`")
+
+    return inject_html
+
+  pltoff.get_image_download_script = get_image_download_script_override
