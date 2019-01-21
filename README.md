@@ -28,6 +28,10 @@ Download and install from this repository using pip.
 pip install git+https://github.com/irisTa56/tk_plot_utils.git
 ```
 
+## Example Notebooks (converted to HTML)
+
+* [My First Example](https://irista56.github.io/tk_plot_utils/examples/plotly_utils.html)
+
 ## Acknowledgement
 
 This project would not be possible without the following great open-source projects.
