@@ -4,6 +4,8 @@ import numpy as np
 import itertools as it
 import collections as co
 
+from datetime import datetime
+
 from .plotly_html import  plt, pltgo, postprocess_by_js
 from .utility_functions import merged_dict
 
@@ -109,10 +111,13 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     # required to delete dummy data used for showing mirror/minor axis
     self._dummy_uids = []
 
+    # whether this instance has subplots or not
+    self._has_subplots = False
+
     # required to align axis range in subplots
     self._range_alignment = {}
 
-  def show(self, data=None, download=True, **kwargs):
+  def show(self, data=None, **kwargs):
     """
     Method to show a plot of data contained in this instance.
     """
@@ -123,15 +128,13 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     auto_kwargs = {
       "show_link": False,
-      "image": "svg" if download else None,
+      "image": "svg",
       "image_width": self.layout.width,
       "image_height": self.layout.height,
-      "filename": "plot",
+      "filename": "plot-" + datetime.now().strftime("%Y%m%d-%H%M%S"),
     }
 
-    for k in list(auto_kwargs.keys()):
-      if k in kwargs:
-        del auto_kwargs[k]
+    auto_kwargs.update(kwargs)
 
     plt.iplot(self, **auto_kwargs, **kwargs)
 
@@ -168,6 +171,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "subplots": subplots,
       **kwargs
     }
+
+    self._has_subplots = True
 
     if "x" in share:
       self.layout.grid.xgap = 0.1
@@ -260,6 +265,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     The string is something like `"{name}, <i>{char}</i> [{unit}]"`,
     if `char` and `unit` are provided.
     """
+    if len(axis) == 2 and axis[1] == "1":
+      axis = axis[0]
+
     if axis not in self._axis:
       self._create_axis(axis)
 
@@ -273,7 +281,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method wrapping `self.set_axis_title()`.
     """
-    if self.layout.grid.to_plotly_json():
+    if self._has_subplots:
       for subplot in self.layout.grid.subplots[-1]:
         self.set_axis_title(
           subplot[:subplot.find("y")], "<span>\u0020</span>")
@@ -289,7 +297,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method wrapping `self.set_axis_title()`.
     """
-    if self.layout.grid.to_plotly_json():
+    if self._has_subplots:
       for subplot in [row[0] for row in self.layout.grid.subplots]:
         self.set_axis_title(
           subplot[subplot.find("y"):], "<span>\u0020</span>")
@@ -305,6 +313,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     Method to clear axis title.
     """
+    if len(axis) == 2 and axis[1] == "1":
+      axis = axis[0]
+
     for d in direc:
 
       for axis in (k for k in self._axis.keys() if k.startswith(d)):
@@ -347,6 +358,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     - `interval`: distance between two consecutive major ticks.
     - `num_minor`: # of minor ticks per major tick.
     """
+    if len(axis) == 2 and axis[1] == "1":
+      axis = axis[0]
+
     if axis not in self._axis:
       self._create_axis(axis)
 
