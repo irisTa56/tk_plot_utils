@@ -42,4 +42,5 @@ This project would not be possible without the following great open-source proje
 
 * Serial number (alphabet) for subplots
 * Auto ticks (using `tickformatstops`?)
+* Support more trace type
 * Documentation
