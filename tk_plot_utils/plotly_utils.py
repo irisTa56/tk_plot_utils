@@ -942,6 +942,7 @@ class MirroredAxisWithMinorTick:
 
     # ensure confort space between tick labels and axis line
     if self.direc == "y":
+      self.layout["tickprefix"] = "\u2009"
       self.layout["ticksuffix"] = "\u2009"
 
     if "anchor" not in kwargs:
