@@ -107,8 +107,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     super().__init__(*args, **kwargs)
 
-    self._init_layout(cp.deepcopy(self._layout))
-    self._init_axis(cp.deepcopy(self._layout))
+    self._init_layout()
+    self._init_axis()
 
     # required to delete dummy data used for showing mirror/minor axis
     self._dummy_uids = []
@@ -219,7 +219,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       top of the main plot area.
     """
     title_layout = {
-      "font": self.layout.titlefont.to_plotly_json(),
+      "font": self._layout["titlefont"],
       "name": "title",
       "showarrow": False,
       "text": title,
@@ -363,27 +363,27 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
   # Initialization/Creation --------------------------------------------
 
-  def _init_layout(self, _layout):
+  def _init_layout(self):
     """
     Method to initialize the layout by merging *static* `default_layout`
-    and *super* `self._layout`.
+    into *super* `self._layout`.
     """
-    self._layout = merged_dict(type(self).default_layout, _layout)
+    self._layout = merged_dict(type(self).default_layout, self._layout)
 
-  def _init_axis(self, _layout):
+  def _init_axis(self):
     """
     Method to initialize settings for axis.
     """
     self._axes = {}
 
-    for k in _layout.keys():
+    for k in self._layout.keys():
       if re.match("[xyz]axis\d*$", k):
         self._create_axis(k.replace("axis", ""))
 
-    if "xaxis" not in _layout:
+    if "xaxis" not in self._layout:
       self._create_axis("x")
 
-    if "yaxis" not in _layout:
+    if "yaxis" not in self._layout:
       self._create_axis("y")
 
   # Layout -------------------------------------------------------------
@@ -585,7 +585,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     # set subplot titles
     if "annotations" in fig.layout:
       for annotation in fig.layout.annotations:
-        annotation["font"] = self.layout.titlefont.to_plotly_json()
+        annotation["font"] = self._layout["titlefont"]
       if "annotations" in self.layout:
         self.layout.annotations += fig.layout.annotations
       else:
@@ -808,7 +808,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     This title is a global one for all subplots.
     """
     title_layout = {
-      "font": self.layout.titlefont.to_plotly_json(),
+      "font": self._layout["titlefont"],
       "name": "x-title",
       "showarrow": False,
       "text": title,
@@ -841,7 +841,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     This title is a global one for all subplots.
     """
     title_layout = {
-      "font": self.layout.titlefont.to_plotly_json(),
+      "font": self._layout["titlefont"],
       "name": "y-title",
       "showarrow": False,
       "text": title,
