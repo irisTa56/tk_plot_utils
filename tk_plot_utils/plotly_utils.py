@@ -212,14 +212,14 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       raise ValueError("Unrecognized position: {}".format(position))
 
-  def set_title(self, title, space=30):
+  def set_title(self, title, space=30, font=None):
     """
     Method to set a title string using `self.layout.annotations`.
     - `space` is distance in pixel between bottom of the title and
       top of the main plot area.
     """
     title_layout = {
-      "font": self._layout["titlefont"],
+      "font": self._layout["titlefont"] if font is None else font,
       "name": "title",
       "showarrow": False,
       "text": title,
@@ -241,6 +241,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           found = True
           annotation.text = title
           annotation.yshift = space
+          if font is not None:
+            annotation.font = font
 
       if not found:
         self.layout.annotations += (title_layout,)
@@ -251,7 +253,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
   # Axis Management ----------------------------------------------------
 
   def set_axis_title(
-    self, axis, name=None, char=None, unit=None):
+    self, axis, name=None, char=None, unit=None, font=None):
     """
     Method to set a title string to the given axis.
     The string is something like `"{name}, <i>{char}</i> [{unit}]"`,
@@ -268,36 +270,38 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       title = self._make_axis_title_string(name, char, unit)
       self._axes[axis].layout["title"] = title
+      if font is not None:
+        self._axes[axis].layout["titlefont"] = font
 
-  def set_x_title(self, name=None, char=None, unit=None):
+  def set_x_title(self, name=None, char=None, unit=None, font=None):
     """
     Method wrapping `self.set_axis_title()`.
     """
     if self._has_subplots:
       for subplot in self._grid_ref[-1]:
-        self.set_axis_title(subplot[0], "<span>\u0020</span>")
+        self.set_axis_title(subplot[0], "<span>\u0020</span>")  # dummy title
       self._set_global_x_title(
-        self._make_axis_title_string(name, char, unit))
+        self._make_axis_title_string(name, char, unit), font)
     else:
       xaxes = [k for k in self._axes.keys() if k.startswith("x")]
-      if len(xaxes) != 1:
-        print("Warning: Set title for 1/{} x axis".format(len(xaxes)))
-      self.set_axis_title(xaxes[0], name, char, unit)
+      if len(xaxes) > 1:
+        print("Warning: Set title for 1 of {} x axes".format(len(xaxes)))
+      self.set_axis_title(xaxes[0], name, char, unit, font)
 
-  def set_y_title(self, name=None, char=None, unit=None):
+  def set_y_title(self, name=None, char=None, unit=None, font=None):
     """
     Method wrapping `self.set_axis_title()`.
     """
     if self._has_subplots:
       for subplot in [row[0] for row in self._grid_ref]:
-        self.set_axis_title(subplot[1], "<span>\u0020</span>")
+        self.set_axis_title(subplot[1], "<span>\u0020</span>")  # dummy title
       self._set_global_y_title(
-        self._make_axis_title_string(name, char, unit))
+        self._make_axis_title_string(name, char, unit), font)
     else:
       yaxes = [k for k in self._axes.keys() if k.startswith("y")]
-      if len(yaxes) != 1:
-        print("Warning: Set title for only 1/{} y axis".format(len(yaxes)))
-      self.set_axis_title(yaxes[0], name, char, unit)
+      if len(yaxes) > 1:
+        print("Warning: Set title for only 1 of {} y axes".format(len(yaxes)))
+      self.set_axis_title(yaxes[0], name, char, unit, font)
 
   def clear_axis_title(self, direc="xy"):
     """
@@ -802,13 +806,13 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       return 10**order, 5
 
-  def _set_global_x_title(self, title):
+  def _set_global_x_title(self, title, font=None):
     """
     Method to set a title of x axis using `self.layout.annotations`.
     This title is a global one for all subplots.
     """
     title_layout = {
-      "font": self._layout["titlefont"],
+      "font": self._layout["titlefont"] if font is None else font,
       "name": "x-title",
       "showarrow": False,
       "text": title,
@@ -828,6 +832,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         if "name" in annotation and annotation.name == "x-title":
           found = True
           annotation.text = title
+          if font is not None:
+            annotation.font = font
 
       if not found:
         self.layout.annotations += (title_layout,)
@@ -835,13 +841,13 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       self.layout.annotations = (title_layout,)
 
-  def _set_global_y_title(self, title):
+  def _set_global_y_title(self, title, font=None):
     """
     Method to set a title of y axis using `self.layout.annotations`.
     This title is a global one for all subplots.
     """
     title_layout = {
-      "font": self._layout["titlefont"],
+      "font": self._layout["titlefont"] if font is None else font,
       "name": "y-title",
       "showarrow": False,
       "text": title,
@@ -862,6 +868,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         if "name" in annotation and annotation.name == "y-title":
           found = True
           annotation.text = title
+          if font is not None:
+            annotation.font = font
 
       if not found:
         self.layout.annotations += (title_layout,)

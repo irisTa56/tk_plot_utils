@@ -169,7 +169,7 @@ xtitle_html = """\
 </script>
 """
 
-# shift x title for subplots
+# shift y title for subplots
 ytitle_html = """\
 <script>
   if (window.Jupyter)
