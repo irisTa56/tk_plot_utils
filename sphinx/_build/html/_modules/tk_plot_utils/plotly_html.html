@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tk_plot_utils.plotly_html &mdash; tk_plot_utils  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> tk_plot_utils
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.7.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apis/modules.html">Modules</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">tk_plot_utils</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>tk_plot_utils.plotly_html</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for tk_plot_utils.plotly_html</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">IPython.display</span> <span class="k">as</span> <span class="nn">ipd</span>
+
+<span class="kn">import</span> <span class="nn">plotly.offline</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">plotly.graph_objs</span> <span class="k">as</span> <span class="nn">pltgo</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+
+<span class="n">initial_html</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  function download_plotly_image(plot_id, format, height, width, filename)</span>
+<span class="s2">  {</span>
+<span class="s2">    let p = document.getElementById(plot_id);</span>
+<span class="s2">    window._Plotly.downloadImage(</span>
+<span class="s2">      p,</span>
+<span class="s2">      {</span>
+<span class="s2">        format: format,</span>
+<span class="s2">        height: height,</span>
+<span class="s2">        width: width,</span>
+<span class="s2">        filename: filename</span>
+<span class="s2">      });</span>
+<span class="s2">  };</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="c1"># hide all draggable elements except for those belonging to main axis</span>
+<span class="n">initial_html</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  function hide_draggable_elements(plot_id)</span>
+<span class="s2">  {</span>
+<span class="s2">    let p = document.getElementById(plot_id);</span>
+<span class="s2">    let svg = p.querySelector(&quot;svg.main-svg&quot;);</span>
+<span class="s2">    let svgNS = svg.namespaceURI;</span>
+<span class="s2">    let hidelayer = document.createElementNS(svgNS, &quot;g&quot;);</span>
+<span class="s2">    hidelayer.setAttribute(&quot;class&quot;, &quot;hidelayer&quot;);</span>
+<span class="s2">    [...p.querySelectorAll(&quot;g.draglayer &gt; g&quot;)].forEach((item) =&gt;</span>
+<span class="s2">      {</span>
+<span class="s2">        if (6 &lt; item.getAttribute(&quot;class&quot;).length)</span>
+<span class="s2">        {</span>
+<span class="s2">          [...item.querySelectorAll(&quot;rect.drag&quot;)].forEach((item) =&gt;</span>
+<span class="s2">            {</span>
+<span class="s2">              let rect = document.createElementNS(svgNS, &quot;rect&quot;);</span>
+<span class="s2">              for (let key of [&quot;style&quot;, &quot;x&quot;, &quot;y&quot;, &quot;width&quot;, &quot;height&quot;])</span>
+<span class="s2">              {</span>
+<span class="s2">                rect.setAttribute(key, item.getAttribute(key));</span>
+<span class="s2">              }</span>
+<span class="s2">              hidelayer.appendChild(rect);</span>
+<span class="s2">            });</span>
+<span class="s2">        }</span>
+<span class="s2">      });</span>
+<span class="s2">    svg.appendChild(hidelayer);</span>
+<span class="s2">  };</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="c1"># remove Autoscale button because it dose not work well for layered ticks</span>
+<span class="n">initial_html</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  function remove_autoscale_button(plot_id)</span>
+<span class="s2">  {</span>
+<span class="s2">    [...document.getElementById(plot_id).querySelectorAll(&quot;a.modebar-btn&quot;)]</span>
+<span class="s2">      .forEach((item) =&gt;</span>
+<span class="s2">        {</span>
+<span class="s2">          if (item.getAttribute(&quot;data-title&quot;) == &quot;Autoscale&quot;)</span>
+<span class="s2">          {</span>
+<span class="s2">            item.parentNode.removeChild(item);</span>
+<span class="s2">          }</span>
+<span class="s2">        });</span>
+<span class="s2">  };</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="c1"># shift x title to correct position for subplots</span>
+<span class="n">initial_html</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  function shift_subplots_xtitle(plot_id, xtitle_index)</span>
+<span class="s2">  {</span>
+<span class="s2">    let p = document.getElementById(plot_id);</span>
+<span class="s2">    let xtitle = [...p.querySelectorAll(&quot;g.infolayer &gt; g&quot;)]</span>
+<span class="s2">      .filter((g) =&gt; g.className.baseVal == &quot;annotation&quot;)[xtitle_index]</span>
+<span class="s2">      .querySelector(&quot;g.cursor-pointer&quot;);</span>
+<span class="s2">    let t = xtitle.getAttribute(&quot;transform&quot;);</span>
+<span class="s2">    let ytrans_old = parseFloat(t.slice(t.indexOf(&quot;,&quot;)+1, t.indexOf(&quot;)&quot;)));</span>
+<span class="s2">    let h_rect = parseFloat(xtitle.querySelector(&quot;rect&quot;).getAttribute(&quot;height&quot;));</span>
+<span class="s2">    let ytrans_new = p.layout.height - h_rect;</span>
+<span class="s2">    xtitle.setAttribute(&quot;transform&quot;,</span>
+<span class="s2">      t.slice(0,t.indexOf(&quot;,&quot;)+1) + ytrans_new.toString() + &quot;)&quot;);</span>
+<span class="s2">    p.layout.annotations[xtitle_index].yshift = ytrans_old - ytrans_new;</span>
+<span class="s2">  };</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="c1"># shift y title to correct position for subplots</span>
+<span class="n">initial_html</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  function shift_subplots_ytitle(plot_id, ytitle_index)</span>
+<span class="s2">  {</span>
+<span class="s2">    let p = document.getElementById(plot_id);</span>
+<span class="s2">    let annotation = [...p.querySelectorAll(&quot;g.infolayer &gt; g&quot;)]</span>
+<span class="s2">      .filter((g) =&gt; g.className.baseVal == &quot;annotation&quot;)[ytitle_index];</span>
+<span class="s2">    let ytitle_parent = annotation.querySelector(&quot;g.annotation-text-g&quot;);</span>
+<span class="s2">    let ytitle = annotation.querySelector(&quot;g.cursor-pointer&quot;);</span>
+<span class="s2">    let r = ytitle_parent.getAttribute(&quot;transform&quot;);</span>
+<span class="s2">    let t = ytitle.getAttribute(&quot;transform&quot;);</span>
+<span class="s2">    let xtrans_old = parseFloat(t.slice(t.indexOf(&quot;(&quot;)+1, t.indexOf(&quot;,&quot;)));</span>
+<span class="s2">    let rect = ytitle.querySelector(&quot;rect&quot;);</span>
+<span class="s2">    let xcenter = 0.5*parseFloat(rect.getAttribute(&quot;width&quot;))</span>
+<span class="s2">                  + parseFloat(rect.getAttribute(&quot;x&quot;));</span>
+<span class="s2">    let ycenter = 0.5*parseFloat(rect.getAttribute(&quot;height&quot;))</span>
+<span class="s2">                  - parseFloat(rect.getAttribute(&quot;y&quot;));</span>
+<span class="s2">    let xtrans_new = ycenter - xcenter;</span>
+<span class="s2">    ytitle.setAttribute(&quot;transform&quot;,</span>
+<span class="s2">      t.slice(0,t.indexOf(&quot;(&quot;)+1) + xtrans_new.toString() + t.slice(t.indexOf(&quot;,&quot;)));</span>
+<span class="s2">      ytitle_parent.setAttribute(&quot;transform&quot;,</span>
+<span class="s2">      r.slice(0,r.indexOf(&quot;,&quot;)+1) + (xtrans_new+xcenter).toString() + r.slice(r.lastIndexOf(&quot;,&quot;)));</span>
+<span class="s2">    p.layout.annotations[ytitle_index].xshift = xtrans_new - xtrans_old;</span>
+<span class="s2">  };</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="init_plotly"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_html.init_plotly">[docs]</a><span class="k">def</span> <span class="nf">init_plotly</span><span class="p">(</span><span class="n">connected</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Initialize plotly.js and some javascript functions in the browser.</span>
+
+<span class="sd">  Call plotly.offline.init_notebook_mode() and display a HTML object</span>
+<span class="sd">  defining some javascript functions.</span>
+
+<span class="sd">  Parameters:</span>
+
+<span class="sd">  connected: bool (default=False)</span>
+<span class="sd">    This parameter is passed to plotly.offline.init_notebook_mode().</span>
+<span class="sd">    If True, the plotly.js library will be loaded from an online CDN.</span>
+<span class="sd">    If False, the plotly.js library will be loaded locally</span>
+<span class="sd">    from the plotly python package.</span>
+
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">init_notebook_mode</span><span class="p">(</span><span class="n">connected</span><span class="o">=</span><span class="n">connected</span><span class="p">)</span>
+  <span class="n">ipd</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ipd</span><span class="o">.</span><span class="n">HTML</span><span class="p">(</span><span class="n">initial_html</span><span class="p">))</span></div>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+
+<span class="kn">import</span> <span class="nn">plotly.offline.offline</span> <span class="k">as</span> <span class="nn">pltoff</span>
+
+<span class="c1"># Jupyter causes &quot;ReferenceError: Plotly is not defined&quot;</span>
+<span class="c1"># when downloading an image of the plot. Using `window._Plotly`</span>
+<span class="c1"># instead of `Plotly` is a workaround for this problem.</span>
+<span class="n">download_html</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;button onclick=&quot;download_plotly_image(&#39;</span><span class="si">{plot_id}</span><span class="s2">&#39;, &#39;</span><span class="si">{format}</span><span class="s2">&#39;, </span><span class="si">{height}</span><span class="s2">, </span><span class="si">{width}</span><span class="s2">, &#39;</span><span class="si">{filename}</span><span class="s2">&#39;)&quot;&gt;</span>
+<span class="s2">  Download Image as &lt;span style=&quot;text-transform:uppercase;&quot;&gt;</span><span class="si">{format}</span><span class="s2">&lt;/span&gt;</span>
+<span class="s2">&lt;/button&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">disable_html</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  if (window.Jupyter)</span>
+<span class="s2">  {{</span>
+<span class="s2">    hide_draggable_elements(&quot;</span><span class="si">{plot_id}</span><span class="s2">&quot;);</span>
+<span class="s2">    remove_autoscale_button(&quot;</span><span class="si">{plot_id}</span><span class="s2">&quot;);</span>
+<span class="s2">  }}</span>
+<span class="s2">  else</span>
+<span class="s2">  {{</span>
+<span class="s2">    window.addEventListener(&quot;load&quot;, () =&gt;</span>
+<span class="s2">    {{</span>
+<span class="s2">      hide_draggable_elements(&quot;</span><span class="si">{plot_id}</span><span class="s2">&quot;);</span>
+<span class="s2">      remove_autoscale_button(&quot;</span><span class="si">{plot_id}</span><span class="s2">&quot;);</span>
+<span class="s2">    }});</span>
+<span class="s2">  }}</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="c1"># shift x title for subplots</span>
+<span class="n">xtitle_html</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  if (window.Jupyter)</span>
+<span class="s2">  {{{{</span>
+<span class="s2">    shift_subplots_xtitle(&quot;{{plot_id}}&quot;, </span><span class="si">{0}</span><span class="s2">);</span>
+<span class="s2">  }}}}</span>
+<span class="s2">  else</span>
+<span class="s2">  {{{{</span>
+<span class="s2">    window.addEventListener(&quot;load&quot;, () =&gt;</span>
+<span class="s2">    {{{{</span>
+<span class="s2">      shift_subplots_xtitle(&quot;{{plot_id}}&quot;, </span><span class="si">{0}</span><span class="s2">);</span>
+<span class="s2">    }}}});</span>
+<span class="s2">  }}}}</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="c1"># shift y title for subplots</span>
+<span class="n">ytitle_html</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  if (window.Jupyter)</span>
+<span class="s2">  {{{{</span>
+<span class="s2">    shift_subplots_ytitle(&quot;{{plot_id}}&quot;, </span><span class="si">{0}</span><span class="s2">);</span>
+<span class="s2">  }}}}</span>
+<span class="s2">  else</span>
+<span class="s2">  {{{{</span>
+<span class="s2">    window.addEventListener(&quot;load&quot;, () =&gt;</span>
+<span class="s2">    {{{{</span>
+<span class="s2">      shift_subplots_ytitle(&quot;{{plot_id}}&quot;, </span><span class="si">{0}</span><span class="s2">);</span>
+<span class="s2">    }}}});</span>
+<span class="s2">  }}}}</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">get_image_download_script_original</span> <span class="o">=</span> <span class="n">pltoff</span><span class="o">.</span><span class="n">get_image_download_script</span>
+
+<div class="viewcode-block" id="override"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_html.override">[docs]</a><span class="k">def</span> <span class="nf">override</span><span class="p">(</span><span class="n">xtitle_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ytitle_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Override a function of plotly.py.</span>
+
+<span class="sd">  Override plotly.offline.offline.get_image_download_script()</span>
+<span class="sd">  every time before plotting.</span>
+
+<span class="sd">  Parameters:</span>
+
+<span class="sd">  xtitle_index: None or int (default=None)</span>
+<span class="sd">    Index in the annotations corresponds to a title of *x* axis.</span>
+<span class="sd">    None means that the title of *x* axis is not written in an annotation.</span>
+<span class="sd">    When the title of *x* axis is written in one of the annotations,</span>
+<span class="sd">    its index should be specified by this parameter and passed to</span>
+<span class="sd">    a javascript function.</span>
+
+<span class="sd">  ytitle_index: None or int (default=None)</span>
+<span class="sd">    Index in the annotations corresponds to a title of *y* axis.</span>
+<span class="sd">    None means that the title of *y* axis is not written in an annotation.</span>
+<span class="sd">    When the title of *y* axis is written in one of the annotations,</span>
+<span class="sd">    its index should be specified by this parameter and passed to</span>
+<span class="sd">    a javascript function.</span>
+
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">inject_html</span> <span class="o">=</span> <span class="n">download_html</span> <span class="o">+</span> <span class="n">disable_html</span>
+
+  <span class="k">if</span> <span class="n">xtitle_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">inject_html</span> <span class="o">+=</span> <span class="n">xtitle_html</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xtitle_index</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">ytitle_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">inject_html</span> <span class="o">+=</span> <span class="n">ytitle_html</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ytitle_index</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">get_image_download_script_override</span><span class="p">(</span><span class="n">caller</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">caller</span> <span class="o">==</span> <span class="s2">&quot;plot&quot;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">get_image_download_script_original</span><span class="p">(</span><span class="n">caller</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">caller</span> <span class="o">!=</span> <span class="s2">&quot;iplot&quot;</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;caller should only be one of `iplot` or `plot`&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inject_html</span>
+
+  <span class="n">pltoff</span><span class="o">.</span><span class="n">get_image_download_script</span> <span class="o">=</span> <span class="n">get_image_download_script_override</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Takayuki Kobayashi
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
