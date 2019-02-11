@@ -1,5 +1,5 @@
 #!/bin/bash
 
-rm -rf ../docs/*
+rm -rf ../docs
 make html
-cp -rf _build/html/* ../docs/
+mv _build/html ../docs
