@@ -152,7 +152,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     self._clear_dummy_traces()
 
   def subplots(
-    self, trace_array, share="", align={}, **kwargs):
+    self, trace_array, share="", align={},
+    xspace_factor=1.0, yspace_factor=1.0, **kwargs):
     """
     Method to make subplots from an array of trace instances.
     - `align` is a dictionary of which keys are 'row' or 'col'
@@ -162,7 +163,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       - `align={'col': 'all'}` leads to that initial range of all 'x*'
       axes will be aligned.
     """
-    trace_list = self._make_subplots(trace_array, share, **kwargs)
+    trace_list = self._make_subplots(
+      trace_array, share, xspace_factor, yspace_factor, **kwargs)
 
     if align:
       self._subplots_range_alignment(align)
@@ -572,7 +574,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
   # Subplots -----------------------------------------------------------
 
-  def _make_subplots(self, trace_array, share, **kwargs):
+  def _make_subplots(
+    self, trace_array, share, xspace_factor=1.0, yspace_factor=1.0, **kwargs):
     """
     Method to make subplots using `plotly.tools.make_subplots()`.
     """
@@ -590,9 +593,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     n_row, n_col = self._get_grid_shape(kwargs["specs"])
 
-    kwargs["horizontal_spacing"] = (
+    kwargs["horizontal_spacing"] = yspace_factor * (
       0.1 if kwargs["shared_yaxes"] else 0.2) / n_col
-    kwargs["vertical_spacing"] = (
+    kwargs["vertical_spacing"] = xspace_factor * (
       0.1 if kwargs["shared_xaxes"] else 0.3) / n_row
 
     fig = tools.make_subplots(rows=n_row, cols=n_col, **kwargs)
