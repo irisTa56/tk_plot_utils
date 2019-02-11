@@ -1,6 +1,22 @@
-# tk_plot_utils
+<!--
+   tk_plot_utils documentation master file, created by
+   sphinx-quickstart on Mon Feb 11 09:33:27 2019.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+-->
 
-Personal functions to use Python's plotting libraries more easily
+# Welcome to tk_plot_utils's documentation!
+
+```eval_rst
+.. toctree::
+   :maxdepth: 1
+   :caption: Contents:
+   :hidden:
+
+   apis/modules
+```
+
+`tk_plot_utils` is an interface to [Plotly (plotly.py)](https://github.com/plotly/plotly.py), an interactive graphing library for Python. Plotly has many remarkable functionalities and is easy to use. However, I found some difficulties when using it. Plotly's default layouts of plot might be too casual for some purposes. In addition, it is difficult to download plot images in SVG format. Solving these problems is the main goal of this interface package.
 
 ## Prerequisites
 
@@ -40,14 +56,8 @@ Google Chrome is recommended.
 * [Scatter Subplots with Shared Axis](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/shared_axis_subplots_scatter.ipynb)
 * [Heatmap Subplots](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/subplots_heatmap.ipynb)
 
-## Acknowledgement
+## Indices and tables
 
-This project would not be possible without the following great open-source projects.
-
-* [plotly/plotly.py](https://github.com/plotly/plotly.py)
-
-## To Do
-
-* Serial number (alphabet) for subplots
-* Auto ticks (using `tickformatstops`?)
-* More trace type
+* [Index](genindex)
+* [Module Index](modindex)
+* [Search](search)

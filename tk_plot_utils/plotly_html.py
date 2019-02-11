@@ -117,8 +117,22 @@ initial_html += """\
 </script>
 """
 
-def init_plotly(*args, **kwargs):
-  plt.init_notebook_mode(*args, **kwargs)
+def init_plotly(connected=False):
+  """Initialize plotly.js and some javascript functions in the browser.
+
+  Call plotly.offline.init_notebook_mode() and display a HTML object
+  defining some javascript functions.
+
+  Parameters:
+
+  connected: bool (default=False)
+    This parameter is passed to plotly.offline.init_notebook_mode().
+    If True, the plotly.js library will be loaded from an online CDN.
+    If False, the plotly.js library will be loaded locally
+    from the plotly python package.
+
+  """
+  plt.init_notebook_mode(connected=connected)
   ipd.display(ipd.HTML(initial_html))
 
 # ----------------------------------------------------------------------
@@ -189,6 +203,28 @@ ytitle_html = """\
 get_image_download_script_original = pltoff.get_image_download_script
 
 def override(xtitle_index=None, ytitle_index=None):
+  """Override a function of plotly.py.
+
+  Override plotly.offline.offline.get_image_download_script()
+  every time before plotting.
+
+  Parameters:
+
+  xtitle_index: None or int (default=None)
+    Index in the annotations corresponds to a title of *x* axis.
+    None means that the title of *x* axis is not written in an annotation.
+    When the title of *x* axis is written in one of the annotations,
+    its index should be specified by this parameter and passed to
+    a javascript function.
+
+  ytitle_index: None or int (default=None)
+    Index in the annotations corresponds to a title of *y* axis.
+    None means that the title of *y* axis is not written in an annotation.
+    When the title of *y* axis is written in one of the annotations,
+    its index should be specified by this parameter and passed to
+    a javascript function.
+
+  """
 
   inject_html = download_html + disable_html
 
@@ -198,9 +234,6 @@ def override(xtitle_index=None, ytitle_index=None):
     inject_html += ytitle_html.format(ytitle_index)
 
   def get_image_download_script_override(caller):
-    """
-    This function overrides `plotly.offline.offline.get_image_download_script`.
-    """
     if caller == "plot":
       return get_image_download_script_original(caller)
     elif caller != "iplot":

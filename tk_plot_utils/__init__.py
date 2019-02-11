@@ -1,3 +1,5 @@
+"""An interface to Plotly"""
+
 from .plotly_html import init_plotly
 from .plotly_utils import plt as pl
 from .plotly_utils import pltgo as go
