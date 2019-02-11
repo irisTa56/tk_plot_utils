@@ -322,7 +322,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Method to set range of an axis.
     """
     if axis in self._axes and minimum is None or maximum is None:
-      self._axes[axis].delete_layout("range")
+      self.delete_axis_layout(axis, "range")
     else:
       self.set_axis_layout(axis, "range", [minimum, maximum])
 
@@ -347,11 +347,12 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
   def set_y_ticks(self, interval, num_minor=5):
     self.set_axis_ticks("y\d*", interval, num_minor)
 
-  def set_axis_layout(self, axis, key, value, **kwargs):
+  def set_axis_layout(
+    self, axis, key, value, **kwargs):
     """
     Set axis layout. `axis` can be a regular expression.
     """
-    if re.match("[xyz]\d*$", axis):
+    if re.match("[xy]\d*$", axis):
       if len(axis) == 2 and axis[1] == "1":  # x1/y1 should be x/y
         axis = axis[0]
       if axis not in self._axes:
@@ -360,8 +361,24 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       self._axes[axis].set_layout(key, value, **kwargs)
     else:
       for k, v in self._axes.items():
-        if re.match(axis, k):
+        if re.match(axis, k) or k in "xy" and re.match(axis, "{}1".format(k)):
           v.set_layout(key, value, **kwargs)
+
+  def delete_axis_layout(self, axis, key):
+    """
+    Delete axis layout. `axis` can be a regular expression.
+    """
+    if re.match("[xy]\d*$", axis):
+      if len(axis) == 2 and axis[1] == "1":  # x1/y1 should be x/y
+        axis = axis[0]
+      if axis not in self._axes:
+        self._create_axis(axis)
+        print("New axis has been created: {}".format(axis))
+      self._axes[axis].delete_layout(key)
+    else:
+      for k, v in self._axes.items():
+        if re.match(axis, k) or k in "xy" and re.match(axis, "{}1".format(k)):
+          v.delete_layout(key)
 
   # Private Methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -381,7 +398,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     self._axes = {}
 
     for k in self._layout.keys():
-      if re.match("[xyz]axis\d*$", k):
+      if re.match("[xy]axis\d*$", k):
         self._create_axis(k.replace("axis", ""))
 
     if "xaxis" not in self._layout:
@@ -583,7 +600,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     # store axis layout of created Figure instance
     axis_layouts = {
       k.replace("axis", ""): v
-      for k, v in fig._layout.items() if re.match("[xyz]axis\d*$", k)
+      for k, v in fig._layout.items() if re.match("[xy]axis\d*$", k)
     }
 
     # set subplot titles
@@ -754,7 +771,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     self._axes.clear()
     axis_layout_keys = [
-      k for k in self._layout.keys() if re.match("[xyz]axis\d*$", k)]
+      k for k in self._layout.keys() if re.match("[xy]axis\d*$", k)]
     for k in axis_layout_keys:
       del self._layout[k]
 
