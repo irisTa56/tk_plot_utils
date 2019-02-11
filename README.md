@@ -34,6 +34,7 @@ pip install git+https://github.com/irisTa56/tk_plot_utils.git
 * [Single Scatter Plot](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/single_scatter_plot.ipynb)
 * [Multiple Scatter Plot](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/multiple_scatter_plot.ipynb)
 * [Heatmap Plot](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/heatmap_plot.ipynb)
+* [Scatter Subplots](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/subplots_scatter.ipynb)
 
 ## Acknowledgement
 
