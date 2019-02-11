@@ -1,4 +1,4 @@
-## tk_plot_utils
+# tk_plot_utils
 
 Personal functions to use Python's plotting libraries more easily
 
@@ -30,11 +30,15 @@ pip install git+https://github.com/irisTa56/tk_plot_utils.git
 
 ## Example Notebooks (converted to HTML)
 
+Google Chrome is recommended.
+
 * [First Demo](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/first_demo.ipynb)
 * [Single Scatter Plot](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/single_scatter_plot.ipynb)
 * [Multiple Scatter Plot](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/multiple_scatter_plot.ipynb)
 * [Heatmap Plot](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/heatmap_plot.ipynb)
 * [Scatter Subplots](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/subplots_scatter.ipynb)
+* [Scatter Subplots with Shared Axis](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/shared_axis_subplots_scatter.ipynb)
+* [Heatmap Subplots](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/subplots_heatmap.ipynb)
 
 ## Acknowledgement
 
