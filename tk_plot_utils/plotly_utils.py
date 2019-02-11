@@ -593,9 +593,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     n_row, n_col = self._get_grid_shape(kwargs["specs"])
 
-    kwargs["horizontal_spacing"] = yspace_factor * (
+    kwargs["horizontal_spacing"] = xspace_factor * (
       0.1 if kwargs["shared_yaxes"] else 0.2) / n_col
-    kwargs["vertical_spacing"] = xspace_factor * (
+    kwargs["vertical_spacing"] = yspace_factor * (
       0.1 if kwargs["shared_xaxes"] else 0.3) / n_row
 
     fig = tools.make_subplots(rows=n_row, cols=n_col, **kwargs)
