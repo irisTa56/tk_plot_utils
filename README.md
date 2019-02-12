@@ -28,7 +28,7 @@ Download and install from this repository using pip.
 pip install git+https://github.com/irisTa56/tk_plot_utils.git
 ```
 
-## Example Notebooks (converted to HTML)
+## Example Notebooks
 
 Google Chrome is recommended.
 

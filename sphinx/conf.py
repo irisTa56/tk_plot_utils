@@ -24,7 +24,10 @@ copyright = '2019, Takayuki Kobayashi'
 author = 'Takayuki Kobayashi'
 
 # The short X.Y version
-version = '0.7.3'
+version_ns = {}
+with open(os.path.join("..", "tk_plot_utils", "_version.py")) as f:
+  exec(f.read(), {}, version_ns)
+version = ".".join(map(str, version_ns["version_info"][:3]))
 # The full version, including alpha/beta/rc tags
 release = ''
 
