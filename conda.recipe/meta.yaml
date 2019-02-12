@@ -1,6 +1,6 @@
 package:
   name: tk_plot_utils
-  version: 0.7.3
+  version: 0.7.4
 
 build:
   number: 1
