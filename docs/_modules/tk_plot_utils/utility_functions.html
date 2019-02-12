@@ -147,19 +147,37 @@
            <div itemprop="articleBody">
             
   <h1>Source code for tk_plot_utils.utility_functions</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span></span><span class="sd">&quot;&quot;&quot;Submodule containing utility functions.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
 
 <div class="viewcode-block" id="merged_dict"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.utility_functions.merged_dict">[docs]</a><span class="k">def</span> <span class="nf">merged_dict</span><span class="p">(</span><span class="n">dct</span><span class="p">,</span> <span class="n">merge_dct</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Make a new dictionary by merging two dictionaries.</span>
+
+<span class="sd">  Return a *new* merged dictionary initially *deep-copied* from</span>
+<span class="sd">  the first given dictionary; the given two dictionaries stay unchanged.</span>
+
+<span class="sd">  Parameters:</span>
+
+<span class="sd">  dct: dict</span>
+<span class="sd">    The first dictionary to be merged. If some of its keys are also in</span>
+<span class="sd">    the second dictionary, the corresponding values will be overwritten.</span>
+
+<span class="sd">  merge_dct: dict</span>
+<span class="sd">    The second dictionary to be merged.</span>
+
+<span class="sd">  &quot;&quot;&quot;</span>
   <span class="n">tmp</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">dct</span><span class="p">)</span>
   <span class="n">_merge_dict</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">merge_dct</span><span class="p">)</span>
   <span class="k">return</span> <span class="n">tmp</span></div>
 
-<span class="k">def</span> <span class="nf">_merge_dict</span><span class="p">(</span><span class="n">dct</span><span class="p">,</span> <span class="n">merge_dct</span><span class="p">):</span>
+<div class="viewcode-block" id="_merge_dict"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.utility_functions._merge_dict">[docs]</a><span class="k">def</span> <span class="nf">_merge_dict</span><span class="p">(</span><span class="n">dct</span><span class="p">,</span> <span class="n">merge_dct</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Recursive part of ``merged_dict()``.&quot;&quot;&quot;</span>
   <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">merge_dct</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="n">dct</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
       <span class="n">_merge_dict</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-      <span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+      <span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span></div>
 </pre></div>
 
            </div>

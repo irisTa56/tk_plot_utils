@@ -88,6 +88,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">tk_plot_utils package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.plotly_html">tk_plot_utils.plotly_html module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.plotly_traces">tk_plot_utils.plotly_traces module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.plotly_utils">tk_plot_utils.plotly_utils module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.utility_functions">tk_plot_utils.utility_functions module</a></li>
 </ul>
@@ -169,16 +170,17 @@
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="module-tk_plot_utils.plotly_html">
 <span id="tk-plot-utils-plotly-html-module"></span><h3>tk_plot_utils.plotly_html module<a class="headerlink" href="#module-tk_plot_utils.plotly_html" title="Permalink to this headline">¶</a></h3>
+<p>Submodule associated with HTML objects containing javascript functions.</p>
 <dl class="function">
 <dt id="tk_plot_utils.plotly_html.init_plotly">
 <code class="descclassname">tk_plot_utils.plotly_html.</code><code class="descname">init_plotly</code><span class="sig-paren">(</span><em>connected=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_html.html#init_plotly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_html.init_plotly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize plotly.js and some javascript functions in the browser.</p>
-<p>Call plotly.offline.init_notebook_mode() and display a HTML object
+<p>Call <code class="docutils literal notranslate"><span class="pre">plotly.offline.init_notebook_mode()</span></code> and display a HTML object
 defining some javascript functions.</p>
 <p>Parameters:</p>
 <dl class="docutils">
-<dt>connected: bool (default=False)</dt>
-<dd>This parameter is passed to plotly.offline.init_notebook_mode().
+<dt>connected: bool</dt>
+<dd>This parameter is passed to <code class="docutils literal notranslate"><span class="pre">plotly.offline.init_notebook_mode()</span></code>.
 If True, the plotly.js library will be loaded from an online CDN.
 If False, the plotly.js library will be loaded locally
 from the plotly python package.</dd>
@@ -188,243 +190,444 @@ from the plotly python package.</dd>
 <dl class="function">
 <dt id="tk_plot_utils.plotly_html.override">
 <code class="descclassname">tk_plot_utils.plotly_html.</code><code class="descname">override</code><span class="sig-paren">(</span><em>xtitle_index=None</em>, <em>ytitle_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_html.html#override"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_html.override" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override a function of plotly.py.</p>
-<p>Override plotly.offline.offline.get_image_download_script()
+<dd><p>Override <code class="docutils literal notranslate"><span class="pre">plotly.offline.offline.get_image_download_script()</span></code>
 every time before plotting.</p>
 <p>Parameters:</p>
 <dl class="docutils">
-<dt>xtitle_index: None or int (default=None)</dt>
+<dt>xtitle_index: None or int</dt>
 <dd>Index in the annotations corresponds to a title of <em>x</em> axis.
-None means that the title of <em>x</em> axis is not written in an annotation.
-When the title of <em>x</em> axis is written in one of the annotations,
-its index should be specified by this parameter and passed to
-a javascript function.</dd>
-<dt>ytitle_index: None or int (default=None)</dt>
+None means that the title of <em>x</em> axis is not written
+in an annotation. When the title of <em>x</em> axis is written in one of
+the annotations, its index should be specified by this parameter
+and passed to a javascript function.</dd>
+<dt>ytitle_index: None or int</dt>
 <dd>Index in the annotations corresponds to a title of <em>y</em> axis.
-None means that the title of <em>y</em> axis is not written in an annotation.
-When the title of <em>y</em> axis is written in one of the annotations,
-its index should be specified by this parameter and passed to
-a javascript function.</dd>
+None means that the title of <em>y</em> axis is not written
+in an annotation. When the title of <em>y</em> axis is written in one of
+the annotations, its index should be specified by this parameter
+and passed to a javascript function.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tk_plot_utils.plotly_traces">
+<span id="tk-plot-utils-plotly-traces-module"></span><h3>tk_plot_utils.plotly_traces module<a class="headerlink" href="#module-tk_plot_utils.plotly_traces" title="Permalink to this headline">¶</a></h3>
+<p>Submodule for making Plotly’s trace instances.</p>
+<dl class="function">
+<dt id="tk_plot_utils.plotly_traces.make_heatmap">
+<code class="descclassname">tk_plot_utils.plotly_traces.</code><code class="descname">make_heatmap</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_traces.html#make_heatmap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_traces.make_heatmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a list of <code class="docutils literal notranslate"><span class="pre">plotly.graph_objs.Heatmap</span></code> instance(s),
+then return it.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>data: dict or list/tuple of dict</dt>
+<dd><p class="first">Heatmap instance (trace) is created from this dictionary.
+If list/tuple of dictionaries are given, multiple instances
+will be created. Regardless of the number of created instances,
+a list of instance(s) is returned.</p>
+<p>For more details:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tk_plot_utils</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">go</span><span class="o">.</span><span class="n">Heatmap</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tk_plot_utils.plotly_traces.make_scatter">
+<code class="descclassname">tk_plot_utils.plotly_traces.</code><code class="descname">make_scatter</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_traces.html#make_scatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_traces.make_scatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a list of <code class="docutils literal notranslate"><span class="pre">plotly.graph_objs.Scatter</span></code> instance(s),
+then return it.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>data: dict or list/tuple of dict</dt>
+<dd><p class="first">Scatter instance (trace) is created from this dictionary.
+If list/tuple of dictionaries are given, multiple instances
+will be created. Regardless of the number of created instances,
+a list of instance(s) is returned.</p>
+<p>For more details:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tk_plot_utils</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
 </dl>
 </dd></dl>
 
 </div>
 <div class="section" id="module-tk_plot_utils.plotly_utils">
 <span id="tk-plot-utils-plotly-utils-module"></span><h3>tk_plot_utils.plotly_utils module<a class="headerlink" href="#module-tk_plot_utils.plotly_utils" title="Permalink to this headline">¶</a></h3>
+<p>Submodule for a class inheriting <code class="docutils literal notranslate"><span class="pre">plotly.graph_objs.FigureWidget</span></code>.</p>
 <dl class="class">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget">
 <em class="property">class </em><code class="descclassname">tk_plot_utils.plotly_utils.</code><code class="descname">ExtendedFigureWidget</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">plotly.graph_objs._figurewidget.FigureWidget</span></code></p>
-<p>Class wrapping <cite>plotly.graph_objs.FigureWidget</cite>.</p>
+<dd><p>Inherits <code class="docutils literal notranslate"><span class="pre">plotly.graph_objs.FigureWidget</span></code>.</p>
+<p>Original FigureWidget’s functionalities <em>plus</em> the following features.</p>
+<ul class="simple">
+<li>Show myself (using <code class="docutils literal notranslate"><span class="pre">plotly.offline.iplot()</span></code>).</li>
+<li>Make subplots (using <code class="docutils literal notranslate"><span class="pre">plotly.tools.make_subplots()</span></code>).</li>
+<li>Manage legend and titles.</li>
+<li>Manage axis layout.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Static Members:</p>
+<dl class="last docutils">
+<dt>default_layout: dict</dt>
+<dd>ExtendedFigureWidget is initialized with this layout.</dd>
+<dt>unitalicized: list</dt>
+<dd>Strings in this list will not be italicized in a symbol of axis title.</dd>
+</dl>
+</div>
+<dl class="method">
+<dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters:</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd>Directly passed to <code class="docutils literal notranslate"><span class="pre">super().__init__()</span></code>.</dd>
+<dt>kwargs:</dt>
+<dd>Directly passed to <code class="docutils literal notranslate"><span class="pre">super().__init__()</span></code>.</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.clear_axis_title">
 <code class="descname">clear_axis_title</code><span class="sig-paren">(</span><em>direc='xy'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.clear_axis_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.clear_axis_title" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to clear axis title.</p>
+<dd><p>Clear axis title.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>direc: str</dt>
+<dd>If <code class="docutils literal notranslate"><span class="pre">direc</span></code> contains ‘x’ and/or ‘y’,
+all axis titles of the direction(s) are removed.</dd>
+</dl>
 </dd></dl>
-
-<dl class="attribute">
-<dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.default_layout">
-<code class="descname">default_layout</code><em class="property"> = {'font': {'family': 'Arial', 'size': 18}, 'height': 450, 'margin': {'b': 0, 'l': 0, 'r': 10}, 'titlefont': {'family': 'Arial', 'size': 20}, 'width': 450}</em><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.default_layout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.delete_axis_layout">
 <code class="descname">delete_axis_layout</code><span class="sig-paren">(</span><em>axis</em>, <em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.delete_axis_layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.delete_axis_layout" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete axis layout. <cite>axis</cite> can be a regular expression.</p>
+<dd><p>Delete a layout setting of the given axis.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>axis: str (can be a regular expression)</dt>
+<dd>Name of axis which the range is set to.
+You can specify multiple axes using a regular expression.</dd>
+<dt>key: str</dt>
+<dd>Key for the layout setting.</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_layout">
 <code class="descname">set_axis_layout</code><span class="sig-paren">(</span><em>axis</em>, <em>key</em>, <em>value</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_layout" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set axis layout. <cite>axis</cite> can be a regular expression.</p>
+<dd><p>Set a layout setting for the given axis.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>axis: str (can be a regular expression)</dt>
+<dd>Name of axis which the range is set to.
+You can specify multiple axes using a regular expression.</dd>
+<dt>key: str</dt>
+<dd>Key for the layout setting.</dd>
+<dt>value: any</dt>
+<dd><p class="first">Value for the layout setting.</p>
+<p>For more details:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tk_plot_utils</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">go</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">XAxis</span><span class="p">)</span>  <span class="c1"># or help(tk.go.layout.YAxis)</span>
+</pre></div>
+</div>
+</dd>
+<dt>kwargs:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">mirror_val</span></code> : replace <code class="docutils literal notranslate"><span class="pre">value</span></code> for sub-axis
+used for drawing mirrored ticks.</li>
+<li><code class="docutils literal notranslate"><span class="pre">minor_val</span></code> : replace <code class="docutils literal notranslate"><span class="pre">value</span></code> for sub-axis
+used for drawing minor ticks.</li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_range">
 <code class="descname">set_axis_range</code><span class="sig-paren">(</span><em>axis</em>, <em>minimum=None</em>, <em>maximum=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_range" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to set range of an axis.</p>
+<dd><p>Set a range to the given axis.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>axis: str (can be a regular expression)</dt>
+<dd>Name of axis which the range is set to.
+You can specify multiple axes using a regular expression.</dd>
+<dt>minimum: number</dt>
+<dd>Minimum of the range.</dd>
+<dt>maximum: number</dt>
+<dd>Maximum of the range.</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_ticks">
 <code class="descname">set_axis_ticks</code><span class="sig-paren">(</span><em>axis</em>, <em>interval</em>, <em>num_minor=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_ticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_ticks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to set ticks.
-- <cite>interval</cite>: distance between two consecutive major ticks.
-- <cite>num_minor</cite>: # of minor ticks per major tick.</p>
+<dd><p>Set ticks of the given axis.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>axis: str (can be a regular expression)</dt>
+<dd>Name of axis which the range is set to.
+You can specify multiple axes using a regular expression.</dd>
+<dt>interval: number</dt>
+<dd>Distance between two consecutive major ticks.</dd>
+<dt>num_minor: int</dt>
+<dd>Number of minor ticks per major tick.</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_title">
-<code class="descname">set_axis_title</code><span class="sig-paren">(</span><em>axis</em>, <em>name=None</em>, <em>char=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_title" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to set a title string to the given axis.
-The string is something like <cite>“{name}, &lt;i&gt;{char}&lt;/i&gt; [{unit}]”</cite>,
-if <cite>char</cite> and <cite>unit</cite> are provided.</p>
+<code class="descname">set_axis_title</code><span class="sig-paren">(</span><em>axis</em>, <em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a title string to the given axis.</p>
+<p>Axis title consists of three parts: <em>name</em>, <em>symbol</em> and <em>unit</em>.
+The entire title is something like “name, <em>symbol</em> [unit]”.
+If all the three parts are not explicitly specified,
+title of the given axis is removed.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>axis: str</dt>
+<dd>Name of axis which the title is set to.</dd>
+<dt>name: str</dt>
+<dd>Main part of axis title.</dd>
+<dt>symbol: str</dt>
+<dd>Symbol representing the title. This part is italicized.</dd>
+<dt>unit: str</dt>
+<dd>Unit of the axis. This is also an important part of axis title!</dd>
+<dt>font: dict</dt>
+<dd>Dictionary specifying a font setting.</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_legend">
 <code class="descname">set_legend</code><span class="sig-paren">(</span><em>position=None</em>, <em>padding=10</em>, <em>xpad=None</em>, <em>ypad=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_legend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_legend" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to set layout of the legend. Calling this method with no
-parameter hides the legend.
-- <cite>position</cite> should be one of “upper right”, “lower right”,</p>
-<blockquote>
-<div>“upper left”, “lower left” and “default”.</div></blockquote>
-<ul class="simple">
-<li><cite>padding</cite> is distance (in px) between the legend and frame line
-of the plot (legend is inside the frame).</li>
-<li><cite>**kwargs</cite> will be added to <cite>plotly.graph_objs.Layout.legend</cite>.</li>
-</ul>
+<dd><p>Set layout of the legend.</p>
+<p>Calling this method with no parameter hides the legend.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>position: str</dt>
+<dd>One of ‘upper right’, ‘lower right’, ‘upper left’, ‘lower left’,
+‘custom’ or ‘default’.</dd>
+<dt>padding: number</dt>
+<dd>Distance (in pixel) between the legend and frame line of the plot
+(legend is inside the frame).</dd>
+<dt>xpad: number</dt>
+<dd>Horizontal distance (in pixel) between the legend and frame line
+of the plot (legend is inside the frame).
+If None, <code class="docutils literal notranslate"><span class="pre">padding</span></code> will be used.</dd>
+<dt>ypad: number</dt>
+<dd>Vertical distance (in pixel) between the legend and frame line
+of the plot (legend is inside the frame).
+If None, <code class="docutils literal notranslate"><span class="pre">padding</span></code> will be used.</dd>
+<dt>kwargs:</dt>
+<dd>Assigned to <code class="docutils literal notranslate"><span class="pre">self.layout.legend</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">position</span></code> is neither ‘custom’ nor ‘default’, values for ‘x’,
+‘y’, ‘xanchor’ and ‘yanchor’ will be updated.</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_title">
 <code class="descname">set_title</code><span class="sig-paren">(</span><em>title</em>, <em>space=30</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_title" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to set a title string using <cite>self.layout.annotations</cite>.
-- <cite>space</cite> is distance in pixel between bottom of the title and</p>
-<blockquote>
-<div>top of the main plot area.</div></blockquote>
+<dd><p>Set a title string.</p>
+<p>This method adds an annotation containing the given string
+to <code class="docutils literal notranslate"><span class="pre">self.layout.annotations</span></code>; does not set <code class="docutils literal notranslate"><span class="pre">self.layout.title</span></code>.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>title: str</dt>
+<dd>Title string.</dd>
+<dt>space: number</dt>
+<dd>Distance in pixel between bottom of the title
+and top of the plot area.</dd>
+<dt>font: dict</dt>
+<dd>Dictionary specifying a font setting.
+If None, a font setting is copied from <code class="docutils literal notranslate"><span class="pre">self._layout[&quot;titlefont&quot;]</span></code>.</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_range">
 <code class="descname">set_x_range</code><span class="sig-paren">(</span><em>minimum=None</em>, <em>maximum=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_x_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_range" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Set a range to all the <em>x</em> axes.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>minimum: number</dt>
+<dd>Minimum of the range.</dd>
+<dt>maximum: number</dt>
+<dd>Maximum of the range.</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_ticks">
 <code class="descname">set_x_ticks</code><span class="sig-paren">(</span><em>interval</em>, <em>num_minor=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_x_ticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_ticks" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Set ticks of all the <em>x</em> axes.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>interval: number</dt>
+<dd>Distance between two consecutive major ticks.</dd>
+<dt>num_minor: int</dt>
+<dd>Number of minor ticks per major tick.</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_title">
-<code class="descname">set_x_title</code><span class="sig-paren">(</span><em>name=None</em>, <em>char=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_x_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_title" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method wrapping <cite>self.set_axis_title()</cite>.</p>
+<code class="descname">set_x_title</code><span class="sig-paren">(</span><em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_x_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a title string to <em>x</em> axis.</p>
+<p>If this instance has subplots, this method sets a single title
+for <em>x</em> axis. The single title is at the center of dummy titles
+of <em>x</em> axes. In other words, horizontal position of the title is
+at the center of the plot area.
+If this instance has no subplots, this method calls
+<code class="docutils literal notranslate"><span class="pre">self.set_axis_title()</span></code> with the newest created <em>x</em> axis.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Parameters have the same meanings
+as those of <code class="docutils literal notranslate"><span class="pre">self.set_axis_title()</span></code>.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_range">
 <code class="descname">set_y_range</code><span class="sig-paren">(</span><em>minimum=None</em>, <em>maximum=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_y_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_range" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Set a range to all the <em>y</em> axes.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>minimum: number</dt>
+<dd>Minimum of the range.</dd>
+<dt>maximum: number</dt>
+<dd>Maximum of the range.</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_ticks">
 <code class="descname">set_y_ticks</code><span class="sig-paren">(</span><em>interval</em>, <em>num_minor=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_y_ticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_ticks" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Set ticks of all the <em>y</em> axes.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>interval: number</dt>
+<dd>Distance between two consecutive major ticks.</dd>
+<dt>num_minor: int</dt>
+<dd>Number of minor ticks per major tick.</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_title">
-<code class="descname">set_y_title</code><span class="sig-paren">(</span><em>name=None</em>, <em>char=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_y_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_title" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method wrapping <cite>self.set_axis_title()</cite>.</p>
+<code class="descname">set_y_title</code><span class="sig-paren">(</span><em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_y_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a title string to <em>y</em> axis.</p>
+<p>If this instance has subplots, this method sets a single title
+for <em>y</em> axis. The single title is at the middle of dummy titles
+of <em>y</em> axes. In other words, vertical position of the title is
+at the middle of the plot area.
+If this instance has no subplots, this method calls
+<code class="docutils literal notranslate"><span class="pre">self.set_axis_title()</span></code> with the newest created <em>y</em> axis.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Parameters have the same meanings
+as those of <code class="docutils literal notranslate"><span class="pre">self.set_axis_title()</span></code>.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.show">
 <code class="descname">show</code><span class="sig-paren">(</span><em>data=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.show" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to show a plot of data contained in this instance.</p>
+<dd><p>Show a plot of data contained in this instance
+using <code class="docutils literal notranslate"><span class="pre">plotly.offline.iplot()</span></code>.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>data: list or tuple</dt>
+<dd>List of tuple of trace instances (scatter, heatmap, etc.)
+to be plotted. These instances are added to <code class="docutils literal notranslate"><span class="pre">self.data</span></code>
+before calling <code class="docutils literal notranslate"><span class="pre">plotly.offline.iplot()</span></code>.
+If None, there is no addition of data.</dd>
+<dt>kwargs:</dt>
+<dd><p class="first">Passed to <code class="docutils literal notranslate"><span class="pre">plotly.offline.iplot()</span></code>.</p>
+<p>For more details:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tk_plot_utils</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">iplot</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.subplots">
 <code class="descname">subplots</code><span class="sig-paren">(</span><em>trace_array</em>, <em>share=''</em>, <em>align={}</em>, <em>xspace_factor=1.0</em>, <em>yspace_factor=1.0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.subplots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.subplots" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to make subplots from an array of trace instances.
-- <cite>align</cite> is a dictionary of which keys are ‘row’ or ‘col’</p>
-<blockquote>
-<div>and values are ‘each’ or ‘all’.
-- <cite>align={‘row’: ‘each’}</cite> leads to that initial range of ‘y*’
-(‘*’ is a wild card) axes in each row will be aligned.
-- <cite>align={‘col’: ‘all’}</cite> leads to that initial range of all ‘x*’
-axes will be aligned.</div></blockquote>
+<dd><p>Make subplots from an array of trace instances
+using <code class="docutils literal notranslate"><span class="pre">plotly.tools.make_subplots()</span></code>.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>trace_array: list</dt>
+<dd>Two-dimensional list containing trace instances.
+Shape and arrangement of this list must correspond to
+those of subplots.</dd>
+<dt>share: str</dt>
+<dd>Specify shared axis. If ‘x’, traces in the same column share
+one <em>x</em> axis. If ‘y’, traces in the same row share one <em>y</em> axis.
+If ‘xy’, both <em>x</em> and <em>y</em> axes are shared.</dd>
+<dt>align: dict</dt>
+<dd><p class="first">Dictionary of which keys are ‘row’ or ‘col’
+and values are ‘each’ or ‘all’.</p>
+<p>Examples:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">align={'col':</span> <span class="pre">'each'}</span></code> aligns initial ranges of <em>x</em> axes
+in each column.</li>
+<li><code class="docutils literal notranslate"><span class="pre">align={'row':</span> <span class="pre">'each'}</span></code> aligns initial ranges of <em>y</em> axes
+in each row.</li>
+<li><code class="docutils literal notranslate"><span class="pre">align={'col':</span> <span class="pre">'all'}</span></code> aligns initial range of all <em>x</em> axes.</li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>xspace_factor: float</dt>
+<dd>Factor multiplied to size of horizontal (in <em>x</em> direction) spacing
+between the subplots. Value greater than 1 leads to wider space,
+and less than 1 leads to narrower space.</dd>
+<dt>yspace_factor: float</dt>
+<dd>Factor multiplied to size of vertical (in <em>x</em> direction) spacing
+between the subplots. Value greater than 1 leads to wider space,
+and less than 1 leads to narrower space.</dd>
+<dt>kwargs:</dt>
+<dd><p class="first">Passed to <code class="docutils literal notranslate"><span class="pre">plotly.tools.make_subplots()</span></code>.</p>
+<p>For more details:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tk_plot_utils</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">make_subplots</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.unitalicized">
-<code class="descname">unitalicized</code><em class="property"> = ['(', ')', 'sin', 'cos', 'tan', 'exp', 'log']</em><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.unitalicized" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick">
-<em class="property">class </em><code class="descclassname">tk_plot_utils.plotly_utils.</code><code class="descname">MirroredAxisWithMinorTick</code><span class="sig-paren">(</span><em>axis</em>, <em>parent_layout</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#MirroredAxisWithMinorTick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="method">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.append_minor_axis">
-<code class="descname">append_minor_axis</code><span class="sig-paren">(</span><em>parent_layout</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#MirroredAxisWithMinorTick.append_minor_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.append_minor_axis" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.append_mirror_axis">
-<code class="descname">append_mirror_axis</code><span class="sig-paren">(</span><em>parent_layout</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#MirroredAxisWithMinorTick.append_mirror_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.append_mirror_axis" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.common_default_layout">
-<code class="descname">common_default_layout</code><em class="property"> = {'automargin': True, 'showgrid': False, 'ticks': 'inside', 'zeroline': False}</em><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.common_default_layout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.delete_layout">
-<code class="descname">delete_layout</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#MirroredAxisWithMinorTick.delete_layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.delete_layout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.in_layout">
-<code class="descname">in_layout</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#MirroredAxisWithMinorTick.in_layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.in_layout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.main_default_layout">
-<code class="descname">main_default_layout</code><em class="property"> = {'automargin': True, 'hoverformat': '.f', 'showgrid': False, 'showline': False, 'showticklabels': True, 'ticklen': 5, 'ticks': 'inside', 'titlefont': {'family': 'Arial', 'size': 20}, 'zeroline': False}</em><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.main_default_layout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.minor_default_layout">
-<code class="descname">minor_default_layout</code><em class="property"> = {'automargin': True, 'mirror': 'ticks', 'showgrid': False, 'showline': True, 'showticklabels': False, 'ticklen': 3, 'ticks': 'inside', 'zeroline': False}</em><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.minor_default_layout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.mirror_default_layout">
-<code class="descname">mirror_default_layout</code><em class="property"> = {'automargin': True, 'showgrid': False, 'showline': False, 'showticklabels': False, 'ticklen': 5, 'ticks': 'inside', 'zeroline': False}</em><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.mirror_default_layout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.mirror_side">
-<code class="descname">mirror_side</code><em class="property"> = {'x': 'top', 'y': 'right'}</em><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.mirror_side" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.opposite">
-<code class="descname">opposite</code><em class="property"> = {'x': 'y', 'y': 'x'}</em><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.opposite" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.set_layout">
-<code class="descname">set_layout</code><span class="sig-paren">(</span><em>key</em>, <em>val</em>, <em>mirror_val=None</em>, <em>minor_val=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#MirroredAxisWithMinorTick.set_layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.MirroredAxisWithMinorTick.set_layout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="tk_plot_utils.plotly_utils.make_heatmap">
-<code class="descclassname">tk_plot_utils.plotly_utils.</code><code class="descname">make_heatmap</code><span class="sig-paren">(</span><em>data</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#make_heatmap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.make_heatmap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to create a list of <cite>plotly.graph_objs.Heatmap</cite> instance(s)
-from <cite>dict</cite> (<cite>list</cite>/<cite>tuple</cite> of <cite>dict</cite>).</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tk_plot_utils.plotly_utils.make_scatter">
-<code class="descclassname">tk_plot_utils.plotly_utils.</code><code class="descname">make_scatter</code><span class="sig-paren">(</span><em>data</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#make_scatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.make_scatter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to create a list of <cite>plotly.graph_objs.Scatter</cite> instance(s)
-from <cite>dict</cite> (<cite>list</cite>/<cite>tuple</cite> of <cite>dict</cite>).</p>
 </dd></dl>
 
 </div>
 <div class="section" id="module-tk_plot_utils.utility_functions">
 <span id="tk-plot-utils-utility-functions-module"></span><h3>tk_plot_utils.utility_functions module<a class="headerlink" href="#module-tk_plot_utils.utility_functions" title="Permalink to this headline">¶</a></h3>
+<p>Submodule containing utility functions.</p>
 <dl class="function">
 <dt id="tk_plot_utils.utility_functions.merged_dict">
 <code class="descclassname">tk_plot_utils.utility_functions.</code><code class="descname">merged_dict</code><span class="sig-paren">(</span><em>dct</em>, <em>merge_dct</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/utility_functions.html#merged_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.utility_functions.merged_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Make a new dictionary by merging two dictionaries.</p>
+<p>Return a <em>new</em> merged dictionary initially <em>deep-copied</em> from
+the first given dictionary; the given two dictionaries stay unchanged.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>dct: dict</dt>
+<dd>The first dictionary to be merged. If some of its keys are also in
+the second dictionary, the corresponding values will be overwritten.</dd>
+<dt>merge_dct: dict</dt>
+<dd>The second dictionary to be merged.</dd>
+</dl>
+</dd></dl>
 
 </div>
 </div>
@@ -439,28 +642,56 @@ from <cite>dict</cite> (<cite>list</cite>/<cite>tuple</cite> of <cite>dict</cite
 
 <dl class="function">
 <dt id="tk_plot_utils.make_scatter">
-<code class="descclassname">tk_plot_utils.</code><code class="descname">make_scatter</code><span class="sig-paren">(</span><em>data</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#make_scatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.make_scatter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to create a list of <cite>plotly.graph_objs.Scatter</cite> instance(s)
-from <cite>dict</cite> (<cite>list</cite>/<cite>tuple</cite> of <cite>dict</cite>).</p>
+<code class="descclassname">tk_plot_utils.</code><code class="descname">make_scatter</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_traces.html#make_scatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.make_scatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a list of <code class="docutils literal notranslate"><span class="pre">plotly.graph_objs.Scatter</span></code> instance(s),
+then return it.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>data: dict or list/tuple of dict</dt>
+<dd><p class="first">Scatter instance (trace) is created from this dictionary.
+If list/tuple of dictionaries are given, multiple instances
+will be created. Regardless of the number of created instances,
+a list of instance(s) is returned.</p>
+<p>For more details:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tk_plot_utils</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="tk_plot_utils.make_heatmap">
-<code class="descclassname">tk_plot_utils.</code><code class="descname">make_heatmap</code><span class="sig-paren">(</span><em>data</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#make_heatmap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.make_heatmap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to create a list of <cite>plotly.graph_objs.Heatmap</cite> instance(s)
-from <cite>dict</cite> (<cite>list</cite>/<cite>tuple</cite> of <cite>dict</cite>).</p>
+<code class="descclassname">tk_plot_utils.</code><code class="descname">make_heatmap</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_traces.html#make_heatmap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.make_heatmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a list of <code class="docutils literal notranslate"><span class="pre">plotly.graph_objs.Heatmap</span></code> instance(s),
+then return it.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>data: dict or list/tuple of dict</dt>
+<dd><p class="first">Heatmap instance (trace) is created from this dictionary.
+If list/tuple of dictionaries are given, multiple instances
+will be created. Regardless of the number of created instances,
+a list of instance(s) is returned.</p>
+<p>For more details:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tk_plot_utils</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">go</span><span class="o">.</span><span class="n">Heatmap</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="tk_plot_utils.init_plotly">
 <code class="descclassname">tk_plot_utils.</code><code class="descname">init_plotly</code><span class="sig-paren">(</span><em>connected=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_html.html#init_plotly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.init_plotly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize plotly.js and some javascript functions in the browser.</p>
-<p>Call plotly.offline.init_notebook_mode() and display a HTML object
+<p>Call <code class="docutils literal notranslate"><span class="pre">plotly.offline.init_notebook_mode()</span></code> and display a HTML object
 defining some javascript functions.</p>
 <p>Parameters:</p>
 <dl class="docutils">
-<dt>connected: bool (default=False)</dt>
-<dd>This parameter is passed to plotly.offline.init_notebook_mode().
+<dt>connected: bool</dt>
+<dd>This parameter is passed to <code class="docutils literal notranslate"><span class="pre">plotly.offline.init_notebook_mode()</span></code>.
 If True, the plotly.js library will be loaded from an online CDN.
 If False, the plotly.js library will be loaded locally
 from the plotly python package.</dd>

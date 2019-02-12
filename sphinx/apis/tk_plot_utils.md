@@ -7,8 +7,15 @@
 ```eval_rst
 .. automodule:: tk_plot_utils.plotly_html
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :special-members:
+```
+
+### tk\_plot\_utils.plotly\_traces module
+
+```eval_rst
+.. automodule:: tk_plot_utils.plotly_traces
+    :members:
+    :special-members:
 ```
 
 ### tk\_plot\_utils.plotly\_utils module
@@ -16,8 +23,7 @@
 ```eval_rst
 .. automodule:: tk_plot_utils.plotly_utils
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :special-members:
 ```
 
 ### tk\_plot\_utils.utility\_functions module
@@ -25,8 +31,7 @@
 ```eval_rst
 .. automodule:: tk_plot_utils.utility_functions
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :special-members:
 ```
 
 ## Module contents
@@ -35,5 +40,6 @@
 .. automodule:: tk_plot_utils
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 ```

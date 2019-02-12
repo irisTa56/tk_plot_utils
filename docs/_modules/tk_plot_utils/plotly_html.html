@@ -147,7 +147,9 @@
            <div itemprop="articleBody">
             
   <h1>Source code for tk_plot_utils.plotly_html</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">IPython.display</span> <span class="k">as</span> <span class="nn">ipd</span>
+<span></span><span class="sd">&quot;&quot;&quot;Submodule associated with HTML objects containing javascript functions.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">IPython.display</span> <span class="k">as</span> <span class="nn">ipd</span>
 
 <span class="kn">import</span> <span class="nn">plotly.offline</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">plotly.graph_objs</span> <span class="k">as</span> <span class="nn">pltgo</span>
@@ -269,13 +271,13 @@
 <div class="viewcode-block" id="init_plotly"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_html.init_plotly">[docs]</a><span class="k">def</span> <span class="nf">init_plotly</span><span class="p">(</span><span class="n">connected</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;Initialize plotly.js and some javascript functions in the browser.</span>
 
-<span class="sd">  Call plotly.offline.init_notebook_mode() and display a HTML object</span>
+<span class="sd">  Call ``plotly.offline.init_notebook_mode()`` and display a HTML object</span>
 <span class="sd">  defining some javascript functions.</span>
 
 <span class="sd">  Parameters:</span>
 
-<span class="sd">  connected: bool (default=False)</span>
-<span class="sd">    This parameter is passed to plotly.offline.init_notebook_mode().</span>
+<span class="sd">  connected: bool</span>
+<span class="sd">    This parameter is passed to ``plotly.offline.init_notebook_mode()``.</span>
 <span class="sd">    If True, the plotly.js library will be loaded from an online CDN.</span>
 <span class="sd">    If False, the plotly.js library will be loaded locally</span>
 <span class="sd">    from the plotly python package.</span>
@@ -352,26 +354,24 @@
 <span class="n">get_image_download_script_original</span> <span class="o">=</span> <span class="n">pltoff</span><span class="o">.</span><span class="n">get_image_download_script</span>
 
 <div class="viewcode-block" id="override"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_html.override">[docs]</a><span class="k">def</span> <span class="nf">override</span><span class="p">(</span><span class="n">xtitle_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ytitle_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-  <span class="sd">&quot;&quot;&quot;Override a function of plotly.py.</span>
-
-<span class="sd">  Override plotly.offline.offline.get_image_download_script()</span>
+  <span class="sd">&quot;&quot;&quot;Override ``plotly.offline.offline.get_image_download_script()``</span>
 <span class="sd">  every time before plotting.</span>
 
 <span class="sd">  Parameters:</span>
 
-<span class="sd">  xtitle_index: None or int (default=None)</span>
+<span class="sd">  xtitle_index: None or int</span>
 <span class="sd">    Index in the annotations corresponds to a title of *x* axis.</span>
-<span class="sd">    None means that the title of *x* axis is not written in an annotation.</span>
-<span class="sd">    When the title of *x* axis is written in one of the annotations,</span>
-<span class="sd">    its index should be specified by this parameter and passed to</span>
-<span class="sd">    a javascript function.</span>
+<span class="sd">    None means that the title of *x* axis is not written</span>
+<span class="sd">    in an annotation. When the title of *x* axis is written in one of</span>
+<span class="sd">    the annotations, its index should be specified by this parameter</span>
+<span class="sd">    and passed to a javascript function.</span>
 
-<span class="sd">  ytitle_index: None or int (default=None)</span>
+<span class="sd">  ytitle_index: None or int</span>
 <span class="sd">    Index in the annotations corresponds to a title of *y* axis.</span>
-<span class="sd">    None means that the title of *y* axis is not written in an annotation.</span>
-<span class="sd">    When the title of *y* axis is written in one of the annotations,</span>
-<span class="sd">    its index should be specified by this parameter and passed to</span>
-<span class="sd">    a javascript function.</span>
+<span class="sd">    None means that the title of *y* axis is not written</span>
+<span class="sd">    in an annotation. When the title of *y* axis is written in one of</span>
+<span class="sd">    the annotations, its index should be specified by this parameter</span>
+<span class="sd">    and passed to a javascript function.</span>
 
 <span class="sd">  &quot;&quot;&quot;</span>
 
