@@ -14,4 +14,5 @@ setup(
   author_email="iris.takayuki@gmail.com",
   url="https://github.com/irisTa56/tk_plot_utils.git",
   packages=find_packages(),
+  install_requires=["plotly"],
 )
