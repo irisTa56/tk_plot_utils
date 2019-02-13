@@ -120,7 +120,7 @@ initial_html += """\
 """
 
 def init_plotly(connected=False):
-  """Initialize plotly.js and some javascript functions in the browser.
+  """Initializes plotly.js and some javascript functions in the browser.
 
   Call ``plotly.offline.init_notebook_mode()`` and display a HTML object
   defining some javascript functions.
@@ -205,7 +205,7 @@ ytitle_html = """\
 get_image_download_script_original = pltoff.get_image_download_script
 
 def override(xtitle_index=None, ytitle_index=None):
-  """Override ``plotly.offline.offline.get_image_download_script()``
+  """Overrides ``plotly.offline.offline.get_image_download_script()``
   every time before plotting.
 
   Parameters:
