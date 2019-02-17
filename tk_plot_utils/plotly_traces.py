@@ -5,7 +5,7 @@ import numpy as np
 from .plotly_html import  pltgo
 
 def make_scatter(data):
-  """Creates a list of ``plotly.graph_objs.Scatter`` instance(s),
+  """Create a list of ``plotly.graph_objs.Scatter`` instance(s),
   then return it.
 
   Parameters:
@@ -30,7 +30,7 @@ def make_scatter(data):
   return [pltgo.Scatter(d) for d in data]
 
 def make_heatmap(data):
-  """Creates a list of ``plotly.graph_objs.Heatmap`` instance(s),
+  """Create a list of ``plotly.graph_objs.Heatmap`` instance(s),
   then return it.
 
   Parameters:

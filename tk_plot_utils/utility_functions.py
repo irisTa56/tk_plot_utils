@@ -3,7 +3,7 @@
 import copy as cp
 
 def merged_dict(dct, merge_dct):
-  """Makes a new dictionary by merging two dictionaries.
+  """Make a new dictionary by merging two dictionaries.
 
   Return a *new* merged dictionary initially *deep-copied* from
   the first given dictionary; the given two dictionaries stay unchanged.
