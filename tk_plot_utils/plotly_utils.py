@@ -122,9 +122,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       if isinstance(a.name, str) and a.name.endswith("-title")
     } if "annotations" in self.layout else {}
 
-    override(
-      dct["x-title"] if "x-title" in dct else None,
-      dct["y-title"] if "y-title" in dct else None)
+    override(dct.get("x-title"), dct.get("y-title"))
 
     plt.iplot(self, **auto_kwargs)
 
@@ -1113,8 +1111,7 @@ class MirroredAxisWithMinorTick:
     # NOTE: `self.layout` of this class is NOT an instance of
     # `plotly.graph_objs.Layout`, but just a Python dictionary.
     self.layout = parent_layout[layout_key] = merged_dict(
-      type(self).main_default_layout, parent_layout[layout_key]
-      if layout_key in parent_layout else {})
+      type(self).main_default_layout, parent_layout.get(layout_key, {}))
 
     # ensure confort space between tick labels and axis line
     if self.direc == "y":
@@ -1170,8 +1167,8 @@ class MirroredAxisWithMinorTick:
     mirror_layout_key = "{}axis{}".format(self.direc, mirror_index)
 
     mirror_layout = parent_layout[mirror_layout_key] = merged_dict(
-      type(self).mirror_default_layout, parent_layout[mirror_layout_key]
-      if mirror_layout_key in parent_layout else {})
+      type(self).mirror_default_layout,
+      parent_layout.get(mirror_layout_key, {}))
 
     mirror_layout["overlaying"] = self.name
     mirror_layout["scaleanchor"] = self.name
@@ -1199,8 +1196,8 @@ class MirroredAxisWithMinorTick:
     minor_layout_key = "{}axis{}".format(self.direc, minor_index)
 
     minor_layout = parent_layout[minor_layout_key] = merged_dict(
-      type(self).minor_default_layout, parent_layout[minor_layout_key]
-      if minor_layout_key in parent_layout else {})
+      type(self).minor_default_layout,
+      parent_layout.get(minor_layout_key, {}))
 
     minor_layout["overlaying"] = self.name
     minor_layout["scaleanchor"] = self.name
