@@ -88,7 +88,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     Parameters:
 
     data: list or tuple
-      List of tuple of trace instances (scatter, heatmap, etc.)
+      List or tuple of trace instances (scatter, heatmap, etc.)
       to be plotted. These instances are added to ``self.data``
       before calling ``plotly.offline.iplot()``.
       If None, there is no addition of data.
@@ -102,7 +102,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       >>> help(tk.pl.iplot)
 
     """
-    if data is not None:
+    if isinstance(data, (tuple, list)):
       self._set_data(data)
 
     self._layout_all()
@@ -149,8 +149,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       If 'xy', both *x* and *y* axes are shared.
 
     align: dict
-      Dictionary of which keys are 'row' or 'col'
-      and values are 'each' or 'all'.
+      Dictionary of which keys are 'row' and/or 'col'
+      and values are 'each' and/or 'all'.
 
       Examples:
 
@@ -251,7 +251,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       raise ValueError("Unrecognized position: {}".format(position))
 
-  def set_title(self, title, space=30, font=None):
+  def set_title(self, title, space=30, font={}):
     """Set a title string.
 
     This method adds an annotation containing the given string
@@ -272,8 +272,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
 
     """
     title_layout = {
-      "font": cp.deepcopy(self._layout["titlefont"])
-        if font is None else font,
+      "font": font if font else cp.deepcopy(self._layout["titlefont"]),
       "name": "title",
       "showarrow": False,
       "text": title,
@@ -307,7 +306,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
   # Axis Management ----------------------------------------------------
 
   def set_axis_title(
-    self, axis, name=None, symbol=None, unit=None, font=None):
+    self, axis, name=None, symbol=None, unit=None, font={}):
     """Set a title string to the given axis.
 
     Axis title consists of three parts: *name*, *symbol* and *unit*.
@@ -344,10 +343,10 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       title = self._make_axis_title_string(name, symbol, unit)
       self._axes[axis].layout["title"] = title
-      if font is not None:
+      if font:
         self._axes[axis].layout["titlefont"] = font
 
-  def set_x_title(self, name=None, symbol=None, unit=None, font=None):
+  def set_x_title(self, name=None, symbol=None, unit=None, font={}):
     """Set a title string to *x* axis.
 
     If this instance has subplots, this method sets a single title
@@ -373,7 +372,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         print("Warning: Set title for 1 of {} x axes".format(len(xaxes)))
       self.set_axis_title(xaxes[0], name, symbol, unit, font)
 
-  def set_y_title(self, name=None, symbol=None, unit=None, font=None):
+  def set_y_title(self, name=None, symbol=None, unit=None, font={}):
     """Set a title string to *y* axis.
 
     If this instance has subplots, this method sets a single title
@@ -435,9 +434,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       Maximum of the range.
 
     """
-    if axis in self._axes and minimum is None or maximum is None:
+    if axis in self._axes and (minimum is None and maximum is None):
       self.delete_axis_layout(axis, "range")
-    else:
+    elif minimum is not None and maximum is not None:
       self.set_axis_layout(axis, "range", [minimum, maximum])
 
   def set_x_range(self, minimum=None, maximum=None):
@@ -942,14 +941,14 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     for k in axis_layout_keys:
       del self._layout[k]
 
-  def _make_axis_title_string(self, name, symbol=None, unit=None):
+  def _make_axis_title_string(self, name=None, symbol=None, unit=None):
     """Make a string for axis title."""
     title = str(name)
 
     if symbol is not None:
 
-      for c in type(self).unitalicized:  # `1 < len(c)` is OK.
-        symbol = symbol.replace(c, "</i>{}<i>".format(c))
+      for s in type(self).unitalicized:
+        symbol = symbol.replace(s, "</i>{}<i>".format(s))
 
       title += ", <i>{}</i>".format(symbol)
 
@@ -987,11 +986,10 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       return 10**order, 5
 
-  def _set_single_x_title(self, title, font=None):
+  def _set_single_x_title(self, title, font={}):
     """Add a single title of *x* axis to ``self.layout.annotations``."""
     title_layout = {
-      "font": cp.deepcopy(self._layout["titlefont"])
-        if font is None else font,
+      "font": font if font else cp.deepcopy(self._layout["titlefont"]),
       "name": "x-title",
       "showarrow": False,
       "text": title,
@@ -1011,7 +1009,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         if "name" in annotation and annotation.name == "x-title":
           found = True
           annotation.text = title
-          if font is not None:
+          if font:
             annotation.font = font
 
       if not found:
@@ -1020,11 +1018,10 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       self.layout.annotations = (title_layout,)
 
-  def _set_single_y_title(self, title, font=None):
+  def _set_single_y_title(self, title, font={}):
     """Add a single title of *y* axis to ``self.layout.annotations``."""
     title_layout = {
-      "font": cp.deepcopy(self._layout["titlefont"])
-        if font is None else font,
+      "font": font if font else cp.deepcopy(self._layout["titlefont"]),
       "name": "y-title",
       "showarrow": False,
       "text": title,
@@ -1045,7 +1042,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
         if "name" in annotation and annotation.name == "y-title":
           found = True
           annotation.text = title
-          if font is not None:
+          if font:
             annotation.font = font
 
       if not found:
@@ -1150,8 +1147,10 @@ class MirroredAxisWithMinorTick:
 
   def set_layout(self, key, val, mirror_val=None, minor_val=None):
     """Set a layout setting specified by *key*."""
-    if mirror_val is None: mirror_val = val
-    if minor_val is None: minor_val = val
+    if mirror_val is None:
+      mirror_val = val
+    if minor_val is None:
+      minor_val = val
     self.layout[key] = val
     for mirror_layout in self._mirror_layouts:
       mirror_layout[key] = mirror_val
