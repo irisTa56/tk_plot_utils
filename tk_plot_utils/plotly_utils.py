@@ -62,6 +62,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
   }
 
   unitalicized = ["(", ")", "sin", "cos", "tan", "exp", "log"]
+  unitalicized += list(map(str, range(10)))
 
   def __init__(self, *args, **kwargs):
     """
@@ -445,7 +446,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     """
     self.set_axis_range("y\d*", minimum, maximum)
 
-  def set_axis_ticks(self, axis, interval, num_minor=5):
+  def set_axis_ticks(self, axis, interval, num_minor=5, logtick=None):
     """Set ticks of the given axis.
 
     Parameters:
@@ -460,9 +461,19 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     num_minor: int
       Number of minor ticks per major tick.
 
+    logtick: str
+      Special values for minor ticks of logarithmic axis;
+      'L<f>', where ``f`` is a positive number, gives ticks linearly
+      spaced in value (but not position). For example ``tick0`` = 0.1,
+      ``dtick`` = 'L0.5' will put ticks at 0.1, 0.6, 1.1, 1.6 etc.
+      To show powers of 10 plus small digits between,
+      use 'D1' (all digits) or 'D2' (only 2 and 5).
+      ``tick0`` is ignored for 'D1' and 'D2'.
+
     """
     self.set_axis_layout(
-      axis, "dtick", interval, minor_val=interval/num_minor)
+      axis, "dtick", interval,
+      minor_val=interval/num_minor if logtick is None else logtick)
 
   def set_x_ticks(self, interval, num_minor=5):
     """Set ticks of all the *x* axes.
@@ -633,15 +644,22 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       for axis in axis_pair:
 
         if not skip_range_setting[axis]:
-          minimum = min(min(s[axis[0]]) for s in scatters)
-          maximum = max(max(s[axis[0]]) for s in scatters)
-          # set padding in y direction only
-          padding = 0 if axis[0] == "x" else 0.05 * (maximum - minimum)
+          if self._axes[axis].layout.get("type") == "log":
+            minimum = np.log10(min(min(s[axis[0]]) for s in scatters))
+            maximum = np.log10(max(max(s[axis[0]]) for s in scatters))
+            padding = 0.05 * (maximum - minimum)
+          else:
+            minimum = min(min(s[axis[0]]) for s in scatters)
+            maximum = max(max(s[axis[0]]) for s in scatters)
+            # set padding in y direction only
+            padding = 0 if axis[0] == "x" else 0.05 * (maximum - minimum)
           self._extend_axis_range(axis, minimum-padding, maximum+padding)
 
         if not skip_ticks_setting[axis]:
           self.set_axis_ticks(
-            axis, *self._auto_axis_ticks(self._axes[axis].layout["range"]))
+            axis, *self._auto_axis_ticks(
+              self._axes[axis].layout["range"],
+              self._axes[axis].layout.get("type") == "log"))
 
       self._add_dummy_traces(axis_pair, self.add_scatter)
 
@@ -875,7 +893,9 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       maximum = max(self._axes[axis].layout["range"][1] for axis in v)
       self.set_axis_range(k, minimum, maximum)
       self.set_axis_ticks(
-        k, *self._auto_axis_ticks(self._axes[k].layout["range"]))
+        k, *self._auto_axis_ticks(
+          self._axes[k].layout["range"],
+          all(self._axes[axis].layout.get("type") == "log" for axis in v)))
 
   def _append_range_alignment(self, master, axis):
     """Append new axis to ``self._range_alignment``."""
@@ -949,20 +969,38 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       self.set_axis_range(axis, minimum, maximum)
 
-  def _auto_axis_ticks(self, axis_range):
+  def _auto_axis_ticks(self, axis_range, log=False):
     """Automatically determine ``interval`` and ``num_minor``,
     which are parameters of ``self.set_axis_ticks()``.
     """
-    tmpd = (axis_range[1]-axis_range[0])/3  # at least 3 tick labels
-    order = int(np.floor(np.log10(tmpd)))
-    scaled = tmpd/(10**order)
+    if log:
 
-    if 5 < scaled:
-      return 5*10**order, 5
-    elif 2 < scaled:
-      return 2*10**order, 4
+      if axis_range[1]-axis_range[0] > 2:  # NOTE: 2 is the best?
+        return 1, None, "D1"
+      else:
+        tmpd = (
+          np.power(10, axis_range[1])
+          - np.power(10, axis_range[0])) / 3  # at least 3 tick labels
+        order = int(np.floor(np.log10(tmpd)))
+        scaled = tmpd/(10**order)
+
+        d_linear = (
+          5 if 5 < scaled else 2 if 2 < scaled else 1) * 10**order
+
+        return "L{}".format(d_linear), None, "L{}".format(d_linear/5)
+
     else:
-      return 10**order, 5
+
+      tmpd = (axis_range[1]-axis_range[0]) / 3  # at least 3 tick labels
+      order = int(np.floor(np.log10(tmpd)))
+      scaled = tmpd/(10**order)
+
+      if 5 < scaled:
+        return 5*10**order, 5
+      elif 2 < scaled:
+        return 2*10**order, 4
+      else:
+        return 10**order, 5
 
   def _set_single_x_title(self, title, font={}):
     """Add a single title of *x* axis to ``self.layout.annotations``."""
@@ -1060,6 +1098,10 @@ class MirroredAxisWithMinorTick:
     "showline": False,
     "showticklabels": True,
     "ticklen": 5,
+    "tickfont": {
+      "family": "Arial",
+      "size": 18,
+    },
     "hoverformat": ".f",
   }
 
@@ -1132,6 +1174,15 @@ class MirroredAxisWithMinorTick:
       mirror_val = val
     if minor_val is None:
       minor_val = val
+
+    # NOTE: 'power' for exponentformat magnifies font by 1.25 times,
+    # see https://github.com/plotly/plotly.js/blob/4160081dd8b5136ba781039bd2b81588b2b36b4f/src/plots/cartesian/axes.js#L1111.
+    # Setting 'tickfont' restores the original font size.
+    if key == "exponentformat" and val == "power":
+      self.layout["tickfont"]["size"] /= 1.25
+    elif key == "tickformat" and self.layout.get("exponentformat") == "power":
+      self.layout["tickfont"]["size"] *= 1.25
+
     self.layout[key] = val
     for mirror_layout in self._mirror_layouts:
       mirror_layout[key] = mirror_val
