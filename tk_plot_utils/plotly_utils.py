@@ -804,8 +804,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           if axis not in self._axes:
             self._create_axis(axis, **tmp_layout)
           else:
-            self._axes[axis].append_mirror_axis(self._layout, **tmp_layout)
-            self._axes[axis].append_minor_axis(self._layout, **tmp_layout)
+            self._axes[axis].append_mirror_axis(**tmp_layout)
+            self._axes[axis].append_minor_axis(**tmp_layout)
 
       flatten_array = flatten_row + flatten_array
 
@@ -1083,6 +1083,7 @@ class MirroredAxisWithMinorTick:
 
   def __init__(self, axis, parent_layout, **kwargs):
     self.name = axis
+    self.parent_layout = parent_layout
 
     self.direc = axis[0]
     self.index = int(axis[1:]) if 1 < len(axis) else 1
@@ -1092,8 +1093,9 @@ class MirroredAxisWithMinorTick:
 
     # NOTE: `self.layout` of this class is NOT an instance of
     # `plotly.graph_objs.Layout`, but just a Python dictionary.
-    self.layout = parent_layout[layout_key] = merged_dict(
-      type(self).main_default_layout, parent_layout.get(layout_key, {}))
+    self.layout = self.parent_layout[layout_key] = merged_dict(
+      type(self).main_default_layout,
+      self.parent_layout.get(layout_key, {}))
 
     # ensure confort space between tick labels and axis line
     if self.direc == "y":
@@ -1110,8 +1112,8 @@ class MirroredAxisWithMinorTick:
     self._mirror_layouts = []
     self._minor_layouts = []
 
-    self.append_mirror_axis(parent_layout, **kwargs)
-    self.append_minor_axis(parent_layout, **kwargs)
+    self.append_mirror_axis(**kwargs)
+    self.append_minor_axis(**kwargs)
 
   def delete_layout(self, key):
     """Delete a layout setting specified by *key*."""
@@ -1142,15 +1144,15 @@ class MirroredAxisWithMinorTick:
       key in layout for layout in [
         self.layout, *self._mirror_layouts, *self._minor_layouts])
 
-  def append_mirror_axis(self, parent_layout, **kwargs):
+  def append_mirror_axis(self, **kwargs):
     """Append an axis used for drawing mirrored (major) ticks."""
     mirror_index = 100 * (2*len(self._mirror_layouts)+1) + self.index
 
     mirror_layout_key = "{}axis{}".format(self.direc, mirror_index)
 
-    mirror_layout = parent_layout[mirror_layout_key] = merged_dict(
+    mirror_layout = self.parent_layout[mirror_layout_key] = merged_dict(
       type(self).mirror_default_layout,
-      parent_layout.get(mirror_layout_key, {}))
+      self.parent_layout.get(mirror_layout_key, {}))
 
     mirror_layout["overlaying"] = self.name
     mirror_layout["scaleanchor"] = self.name
@@ -1171,15 +1173,15 @@ class MirroredAxisWithMinorTick:
     self.mirrors.append("{}{}".format(self.direc, mirror_index))
     self._mirror_layouts.append(mirror_layout)
 
-  def append_minor_axis(self, parent_layout, **kwargs):
+  def append_minor_axis(self, **kwargs):
     """Append an axis used for drawing minor ticks."""
     minor_index = 100 * (2*len(self._minor_layouts)+2) + self.index
 
     minor_layout_key = "{}axis{}".format(self.direc, minor_index)
 
-    minor_layout = parent_layout[minor_layout_key] = merged_dict(
+    minor_layout = self.parent_layout[minor_layout_key] = merged_dict(
       type(self).minor_default_layout,
-      parent_layout.get(minor_layout_key, {}))
+      self.parent_layout.get(minor_layout_key, {}))
 
     minor_layout["overlaying"] = self.name
     minor_layout["scaleanchor"] = self.name
