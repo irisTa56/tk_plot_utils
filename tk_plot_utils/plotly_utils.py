@@ -51,8 +51,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "yref": "container",
     },
     "margin": {
-      "b": 0,
-      "l": 0,
+      "b": 20,
+      "l": 20,
       "r": 20,
       "t": 80
     }
