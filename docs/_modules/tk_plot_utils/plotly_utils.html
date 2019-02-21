@@ -57,7 +57,7 @@
             
             
               <div class="version">
-                0.7.4
+                0.8.0
               </div>
             
           
@@ -192,18 +192,26 @@
       <span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;Arial&quot;</span><span class="p">,</span>
       <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;titlefont&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;Arial&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;Arial&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;xanchor&quot;</span><span class="p">:</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;xref&quot;</span><span class="p">:</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;yanchor&quot;</span><span class="p">:</span> <span class="s2">&quot;middle&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;yref&quot;</span><span class="p">:</span> <span class="s2">&quot;container&quot;</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;margin&quot;</span><span class="p">:</span> <span class="p">{</span>
       <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
       <span class="s2">&quot;l&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-      <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+      <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+      <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="mi">80</span>
     <span class="p">}</span>
   <span class="p">}</span>
 
   <span class="n">unitalicized</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;sin&quot;</span><span class="p">,</span> <span class="s2">&quot;cos&quot;</span><span class="p">,</span> <span class="s2">&quot;tan&quot;</span><span class="p">,</span> <span class="s2">&quot;exp&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">]</span>
+  <span class="n">unitalicized</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span>
 
 <div class="viewcode-block" id="ExtendedFigureWidget.__init__"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.__init__">[docs]</a>  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -237,7 +245,7 @@
 <span class="sd">    Parameters:</span>
 
 <span class="sd">    data: list or tuple</span>
-<span class="sd">      List of tuple of trace instances (scatter, heatmap, etc.)</span>
+<span class="sd">      List or tuple of trace instances (scatter, heatmap, etc.)</span>
 <span class="sd">      to be plotted. These instances are added to ``self.data``</span>
 <span class="sd">      before calling ``plotly.offline.iplot()``.</span>
 <span class="sd">      If None, there is no addition of data.</span>
@@ -251,7 +259,7 @@
 <span class="sd">      &gt;&gt;&gt; help(tk.pl.iplot)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">_set_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_layout_all</span><span class="p">()</span>
@@ -271,9 +279,7 @@
       <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-title&quot;</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">if</span> <span class="s2">&quot;annotations&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="k">else</span> <span class="p">{}</span>
 
-    <span class="n">override</span><span class="p">(</span>
-      <span class="n">dct</span><span class="p">[</span><span class="s2">&quot;x-title&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;x-title&quot;</span> <span class="ow">in</span> <span class="n">dct</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-      <span class="n">dct</span><span class="p">[</span><span class="s2">&quot;y-title&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;y-title&quot;</span> <span class="ow">in</span> <span class="n">dct</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">override</span><span class="p">(</span><span class="n">dct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x-title&quot;</span><span class="p">),</span> <span class="n">dct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y-title&quot;</span><span class="p">))</span>
 
     <span class="n">plt</span><span class="o">.</span><span class="n">iplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">auto_kwargs</span><span class="p">)</span>
 
@@ -298,8 +304,8 @@
 <span class="sd">      If &#39;xy&#39;, both *x* and *y* axes are shared.</span>
 
 <span class="sd">    align: dict</span>
-<span class="sd">      Dictionary of which keys are &#39;row&#39; or &#39;col&#39;</span>
-<span class="sd">      and values are &#39;each&#39; or &#39;all&#39;.</span>
+<span class="sd">      Dictionary of which keys are &#39;row&#39; and/or &#39;col&#39;</span>
+<span class="sd">      and values are &#39;each&#39; and/or &#39;all&#39;.</span>
 
 <span class="sd">      Examples:</span>
 
@@ -400,63 +406,34 @@
     <span class="k">else</span><span class="p">:</span>
       <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized position: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">position</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ExtendedFigureWidget.set_title"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_title">[docs]</a>  <span class="k">def</span> <span class="nf">set_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtendedFigureWidget.set_title"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_title">[docs]</a>  <span class="k">def</span> <span class="nf">set_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;Set a title string.</span>
-
-<span class="sd">    This method adds an annotation containing the given string</span>
-<span class="sd">    to ``self.layout.annotations``; does not set ``self.layout.title``.</span>
 
 <span class="sd">    Parameters:</span>
 
 <span class="sd">    title: str</span>
 <span class="sd">      Title string.</span>
 
-<span class="sd">    space: number</span>
-<span class="sd">      Distance in pixel between bottom of the title</span>
-<span class="sd">      and top of the plot area.</span>
+<span class="sd">    shift: number</span>
+<span class="sd">      Shift (in pixel) from default *y* position.</span>
+<span class="sd">      The default position is middle of the top margin area.</span>
 
 <span class="sd">    font: dict</span>
 <span class="sd">      Dictionary specifying a font setting.</span>
-<span class="sd">      If None, a font setting is copied from ``self._layout[&quot;titlefont&quot;]``.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">title_layout</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout</span><span class="p">[</span><span class="s2">&quot;titlefont&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">font</span><span class="p">,</span>
-      <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;showarrow&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-      <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
-      <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-      <span class="s2">&quot;xanchor&quot;</span><span class="p">:</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;xref&quot;</span><span class="p">:</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
-      <span class="s2">&quot;yanchor&quot;</span><span class="p">:</span> <span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;yref&quot;</span><span class="p">:</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;yshift&quot;</span><span class="p">:</span> <span class="n">space</span><span class="p">,</span>
-    <span class="p">}</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">height</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">margin</span><span class="o">.</span><span class="n">t</span>
 
-    <span class="k">if</span> <span class="s2">&quot;annotations&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="n">h</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">t</span><span class="o">+</span><span class="n">shift</span><span class="p">)</span><span class="o">/</span><span class="n">h</span><span class="p">)</span>
 
-      <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
-
-      <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">annotation</span> <span class="ow">and</span> <span class="n">annotation</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;title&quot;</span><span class="p">:</span>
-          <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
-          <span class="n">annotation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">title</span>
-          <span class="n">annotation</span><span class="o">.</span><span class="n">yshift</span> <span class="o">=</span> <span class="n">space</span>
-          <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">annotation</span><span class="o">.</span><span class="n">font</span> <span class="o">=</span> <span class="n">font</span>
-
-      <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">annotations</span> <span class="o">+=</span> <span class="p">(</span><span class="n">title_layout</span><span class="p">,)</span>
-
-    <span class="k">else</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">annotations</span> <span class="o">=</span> <span class="p">(</span><span class="n">title_layout</span><span class="p">,)</span></div>
+    <span class="k">if</span> <span class="n">font</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">)</span></div>
 
   <span class="c1"># Axis Management ----------------------------------------------------</span>
 
 <div class="viewcode-block" id="ExtendedFigureWidget.set_axis_title"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_title">[docs]</a>  <span class="k">def</span> <span class="nf">set_axis_title</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;Set a title string to the given axis.</span>
 
 <span class="sd">    Axis title consists of three parts: *name*, *symbol* and *unit*.</span>
@@ -489,14 +466,15 @@
       <span class="bp">self</span><span class="o">.</span><span class="n">_create_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">symbol</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">delete_layout</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="s2">&quot;text&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]:</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">][</span><span class="s2">&quot;text&quot;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
       <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_axis_title_string</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
-      <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;titlefont&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">font</span></div>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">][</span><span class="s2">&quot;text&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
+      <span class="k">if</span> <span class="n">font</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">][</span><span class="s2">&quot;font&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">font</span></div>
 
-<div class="viewcode-block" id="ExtendedFigureWidget.set_x_title"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_title">[docs]</a>  <span class="k">def</span> <span class="nf">set_x_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtendedFigureWidget.set_x_title"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_title">[docs]</a>  <span class="k">def</span> <span class="nf">set_x_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;Set a title string to *x* axis.</span>
 
 <span class="sd">    If this instance has subplots, this method sets a single title</span>
@@ -522,7 +500,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Set title for 1 of </span><span class="si">{}</span><span class="s2"> x axes&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xaxes</span><span class="p">)))</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">set_axis_title</span><span class="p">(</span><span class="n">xaxes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">font</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ExtendedFigureWidget.set_y_title"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_title">[docs]</a>  <span class="k">def</span> <span class="nf">set_y_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtendedFigureWidget.set_y_title"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_title">[docs]</a>  <span class="k">def</span> <span class="nf">set_y_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;Set a title string to *y* axis.</span>
 
 <span class="sd">    If this instance has subplots, this method sets a single title</span>
@@ -584,9 +562,9 @@
 <span class="sd">      Maximum of the range.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span> <span class="ow">and</span> <span class="n">minimum</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">maximum</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span> <span class="ow">and</span> <span class="p">(</span><span class="n">minimum</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">maximum</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">delete_axis_layout</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="s2">&quot;range&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">minimum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">maximum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">set_axis_layout</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="s2">&quot;range&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="ExtendedFigureWidget.set_x_range"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_range">[docs]</a>  <span class="k">def</span> <span class="nf">set_x_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maximum</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -617,7 +595,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">set_axis_range</span><span class="p">(</span><span class="s2">&quot;y\d*&quot;</span><span class="p">,</span> <span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ExtendedFigureWidget.set_axis_ticks"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_ticks">[docs]</a>  <span class="k">def</span> <span class="nf">set_axis_ticks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">num_minor</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtendedFigureWidget.set_axis_ticks"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_ticks">[docs]</a>  <span class="k">def</span> <span class="nf">set_axis_ticks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">num_minor</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">logtick</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Set ticks of the given axis.</span>
 
 <span class="sd">    Parameters:</span>
@@ -632,9 +610,19 @@
 <span class="sd">    num_minor: int</span>
 <span class="sd">      Number of minor ticks per major tick.</span>
 
+<span class="sd">    logtick: str</span>
+<span class="sd">      Special values for minor ticks of logarithmic axis;</span>
+<span class="sd">      &#39;L&lt;f&gt;&#39;, where ``f`` is a positive number, gives ticks linearly</span>
+<span class="sd">      spaced in value (but not position). For example ``tick0`` = 0.1,</span>
+<span class="sd">      ``dtick`` = &#39;L0.5&#39; will put ticks at 0.1, 0.6, 1.1, 1.6 etc.</span>
+<span class="sd">      To show powers of 10 plus small digits between,</span>
+<span class="sd">      use &#39;D1&#39; (all digits) or &#39;D2&#39; (only 2 and 5).</span>
+<span class="sd">      ``tick0`` is ignored for &#39;D1&#39; and &#39;D2&#39;.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">set_axis_layout</span><span class="p">(</span>
-      <span class="n">axis</span><span class="p">,</span> <span class="s2">&quot;dtick&quot;</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">minor_val</span><span class="o">=</span><span class="n">interval</span><span class="o">/</span><span class="n">num_minor</span><span class="p">)</span></div>
+      <span class="n">axis</span><span class="p">,</span> <span class="s2">&quot;dtick&quot;</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span>
+      <span class="n">minor_val</span><span class="o">=</span><span class="n">interval</span><span class="o">/</span><span class="n">num_minor</span> <span class="k">if</span> <span class="n">logtick</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">logtick</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExtendedFigureWidget.set_x_ticks"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_ticks">[docs]</a>  <span class="k">def</span> <span class="nf">set_x_ticks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">num_minor</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Set ticks of all the *x* axes.</span>
@@ -805,15 +793,22 @@
       <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axis_pair</span><span class="p">:</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_range_setting</span><span class="p">[</span><span class="n">axis</span><span class="p">]:</span>
-          <span class="n">minimum</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scatters</span><span class="p">)</span>
-          <span class="n">maximum</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scatters</span><span class="p">)</span>
-          <span class="c1"># set padding in y direction only</span>
-          <span class="n">padding</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span> <span class="k">else</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="p">(</span><span class="n">maximum</span> <span class="o">-</span> <span class="n">minimum</span><span class="p">)</span>
+          <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+            <span class="n">minimum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scatters</span><span class="p">))</span>
+            <span class="n">maximum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scatters</span><span class="p">))</span>
+            <span class="n">padding</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="p">(</span><span class="n">maximum</span> <span class="o">-</span> <span class="n">minimum</span><span class="p">)</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">minimum</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scatters</span><span class="p">)</span>
+            <span class="n">maximum</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scatters</span><span class="p">)</span>
+            <span class="c1"># set padding in y direction only</span>
+            <span class="n">padding</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span> <span class="k">else</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="p">(</span><span class="n">maximum</span> <span class="o">-</span> <span class="n">minimum</span><span class="p">)</span>
           <span class="bp">self</span><span class="o">.</span><span class="n">_extend_axis_range</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">minimum</span><span class="o">-</span><span class="n">padding</span><span class="p">,</span> <span class="n">maximum</span><span class="o">+</span><span class="n">padding</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_ticks_setting</span><span class="p">[</span><span class="n">axis</span><span class="p">]:</span>
           <span class="bp">self</span><span class="o">.</span><span class="n">set_axis_ticks</span><span class="p">(</span>
-            <span class="n">axis</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_auto_axis_ticks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;range&quot;</span><span class="p">]))</span>
+            <span class="n">axis</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_auto_axis_ticks</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;range&quot;</span><span class="p">],</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">))</span>
 
       <span class="bp">self</span><span class="o">.</span><span class="n">_add_dummy_traces</span><span class="p">(</span><span class="n">axis_pair</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_scatter</span><span class="p">)</span>
 
@@ -941,7 +936,7 @@
     <span class="c1"># set subplot titles</span>
     <span class="k">if</span> <span class="s2">&quot;annotations&quot;</span> <span class="ow">in</span> <span class="n">fig</span><span class="o">.</span><span class="n">layout</span><span class="p">:</span>
       <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">fig</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
-        <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;font&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout</span><span class="p">[</span><span class="s2">&quot;titlefont&quot;</span><span class="p">])</span>
+        <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;font&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">to_plotly_json</span><span class="p">()</span>
       <span class="k">if</span> <span class="s2">&quot;annotations&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">annotations</span> <span class="o">+=</span> <span class="n">fig</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">annotations</span>
       <span class="k">else</span><span class="p">:</span>
@@ -976,8 +971,8 @@
           <span class="k">if</span> <span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_create_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="o">**</span><span class="n">tmp_layout</span><span class="p">)</span>
           <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">append_mirror_axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout</span><span class="p">,</span> <span class="o">**</span><span class="n">tmp_layout</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">append_minor_axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout</span><span class="p">,</span> <span class="o">**</span><span class="n">tmp_layout</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">append_mirror_axis</span><span class="p">(</span><span class="o">**</span><span class="n">tmp_layout</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">append_minor_axis</span><span class="p">(</span><span class="o">**</span><span class="n">tmp_layout</span><span class="p">)</span>
 
       <span class="n">flatten_array</span> <span class="o">=</span> <span class="n">flatten_row</span> <span class="o">+</span> <span class="n">flatten_array</span>
 
@@ -1047,7 +1042,9 @@
       <span class="n">maximum</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">v</span><span class="p">)</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">set_axis_range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">)</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">set_axis_ticks</span><span class="p">(</span>
-        <span class="n">k</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_auto_axis_ticks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;range&quot;</span><span class="p">]))</span>
+        <span class="n">k</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_auto_axis_ticks</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;range&quot;</span><span class="p">],</span>
+          <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">v</span><span class="p">)))</span>
 
   <span class="k">def</span> <span class="nf">_append_range_alignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Append new axis to ``self._range_alignment``.&quot;&quot;&quot;</span>
@@ -1091,14 +1088,14 @@
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">axis_layout_keys</span><span class="p">:</span>
       <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layout</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
-  <span class="k">def</span> <span class="nf">_make_axis_title_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">_make_axis_title_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Make a string for axis title.&quot;&quot;&quot;</span>
     <span class="n">title</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">symbol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 
-      <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">unitalicized</span><span class="p">:</span>  <span class="c1"># `1 &lt; len(c)` is OK.</span>
-        <span class="n">symbol</span> <span class="o">=</span> <span class="n">symbol</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s2">&quot;&lt;/i&gt;</span><span class="si">{}</span><span class="s2">&lt;i&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+      <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">unitalicized</span><span class="p">:</span>
+        <span class="n">symbol</span> <span class="o">=</span> <span class="n">symbol</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s2">&quot;&lt;/i&gt;</span><span class="si">{}</span><span class="s2">&lt;i&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
 
       <span class="n">title</span> <span class="o">+=</span> <span class="s2">&quot;, &lt;i&gt;</span><span class="si">{}</span><span class="s2">&lt;/i&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
 
@@ -1121,26 +1118,43 @@
     <span class="k">else</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">set_axis_range</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">_auto_axis_ticks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis_range</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">_auto_axis_ticks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis_range</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Automatically determine ``interval`` and ``num_minor``,</span>
 <span class="sd">    which are parameters of ``self.set_axis_ticks()``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">tmpd</span> <span class="o">=</span> <span class="p">(</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">3</span>  <span class="c1"># at least 3 tick labels</span>
-    <span class="n">order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">tmpd</span><span class="p">)))</span>
-    <span class="n">scaled</span> <span class="o">=</span> <span class="n">tmpd</span><span class="o">/</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
 
-    <span class="k">if</span> <span class="mi">5</span> <span class="o">&lt;</span> <span class="n">scaled</span><span class="p">:</span>
-      <span class="k">return</span> <span class="mi">5</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">,</span> <span class="mi">5</span>
-    <span class="k">elif</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="n">scaled</span><span class="p">:</span>
-      <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">,</span> <span class="mi">4</span>
+      <span class="k">if</span> <span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># NOTE: 2 is the best?</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;D1&quot;</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">tmpd</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+          <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">/</span> <span class="mi">3</span>  <span class="c1"># at least 3 tick labels</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">tmpd</span><span class="p">)))</span>
+        <span class="n">scaled</span> <span class="o">=</span> <span class="n">tmpd</span><span class="o">/</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="n">d_linear</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="mi">5</span> <span class="k">if</span> <span class="mi">5</span> <span class="o">&lt;</span> <span class="n">scaled</span> <span class="k">else</span> <span class="mi">2</span> <span class="k">if</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="n">scaled</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="n">order</span>
+
+        <span class="k">return</span> <span class="s2">&quot;L</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d_linear</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;L</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d_linear</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>
+
     <span class="k">else</span><span class="p">:</span>
-      <span class="k">return</span> <span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">,</span> <span class="mi">5</span>
 
-  <span class="k">def</span> <span class="nf">_set_single_x_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+      <span class="n">tmpd</span> <span class="o">=</span> <span class="p">(</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">3</span>  <span class="c1"># at least 3 tick labels</span>
+      <span class="n">order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">tmpd</span><span class="p">)))</span>
+      <span class="n">scaled</span> <span class="o">=</span> <span class="n">tmpd</span><span class="o">/</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="mi">5</span> <span class="o">&lt;</span> <span class="n">scaled</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">5</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">,</span> <span class="mi">5</span>
+      <span class="k">elif</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="n">scaled</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">,</span> <span class="mi">4</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">10</span><span class="o">**</span><span class="n">order</span><span class="p">,</span> <span class="mi">5</span>
+
+  <span class="k">def</span> <span class="nf">_set_single_x_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;Add a single title of *x* axis to ``self.layout.annotations``.&quot;&quot;&quot;</span>
     <span class="n">title_layout</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout</span><span class="p">[</span><span class="s2">&quot;titlefont&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">font</span><span class="p">,</span>
+      <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="n">font</span> <span class="k">if</span> <span class="n">font</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">to_plotly_json</span><span class="p">(),</span>
       <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;x-title&quot;</span><span class="p">,</span>
       <span class="s2">&quot;showarrow&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
       <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
@@ -1160,7 +1174,7 @@
         <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">annotation</span> <span class="ow">and</span> <span class="n">annotation</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;x-title&quot;</span><span class="p">:</span>
           <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
           <span class="n">annotation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">title</span>
-          <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="k">if</span> <span class="n">font</span><span class="p">:</span>
             <span class="n">annotation</span><span class="o">.</span><span class="n">font</span> <span class="o">=</span> <span class="n">font</span>
 
       <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
@@ -1169,11 +1183,10 @@
     <span class="k">else</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">annotations</span> <span class="o">=</span> <span class="p">(</span><span class="n">title_layout</span><span class="p">,)</span>
 
-  <span class="k">def</span> <span class="nf">_set_single_y_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">_set_single_y_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;Add a single title of *y* axis to ``self.layout.annotations``.&quot;&quot;&quot;</span>
     <span class="n">title_layout</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout</span><span class="p">[</span><span class="s2">&quot;titlefont&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">font</span><span class="p">,</span>
+      <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="n">font</span> <span class="k">if</span> <span class="n">font</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">to_plotly_json</span><span class="p">(),</span>
       <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;y-title&quot;</span><span class="p">,</span>
       <span class="s2">&quot;showarrow&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
       <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
@@ -1194,7 +1207,7 @@
         <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">annotation</span> <span class="ow">and</span> <span class="n">annotation</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;y-title&quot;</span><span class="p">:</span>
           <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
           <span class="n">annotation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">title</span>
-          <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="k">if</span> <span class="n">font</span><span class="p">:</span>
             <span class="n">annotation</span><span class="o">.</span><span class="n">font</span> <span class="o">=</span> <span class="n">font</span>
 
       <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
@@ -1225,13 +1238,19 @@
   <span class="c1"># because mirroring ticks breaks auto margin (for labeled axis).</span>
   <span class="n">main_default_layout</span> <span class="o">=</span> <span class="p">{</span>
     <span class="o">**</span><span class="n">cp</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">common_default_layout</span><span class="p">),</span>
-    <span class="s2">&quot;titlefont&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;Arial&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;Arial&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+      <span class="p">}</span>
     <span class="p">},</span>
     <span class="s2">&quot;showline&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="s2">&quot;showticklabels&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="s2">&quot;ticklen&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;tickfont&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;Arial&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+    <span class="p">},</span>
     <span class="s2">&quot;hoverformat&quot;</span><span class="p">:</span> <span class="s2">&quot;.f&quot;</span><span class="p">,</span>
   <span class="p">}</span>
 
@@ -1255,6 +1274,7 @@
 
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">parent_layout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">axis</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">parent_layout</span> <span class="o">=</span> <span class="n">parent_layout</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">direc</span> <span class="o">=</span> <span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
@@ -1264,13 +1284,13 @@
 
     <span class="c1"># NOTE: `self.layout` of this class is NOT an instance of</span>
     <span class="c1"># `plotly.graph_objs.Layout`, but just a Python dictionary.</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">parent_layout</span><span class="p">[</span><span class="n">layout_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">merged_dict</span><span class="p">(</span>
-      <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">main_default_layout</span><span class="p">,</span> <span class="n">parent_layout</span><span class="p">[</span><span class="n">layout_key</span><span class="p">]</span>
-      <span class="k">if</span> <span class="n">layout_key</span> <span class="ow">in</span> <span class="n">parent_layout</span> <span class="k">else</span> <span class="p">{})</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_layout</span><span class="p">[</span><span class="n">layout_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">merged_dict</span><span class="p">(</span>
+      <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">main_default_layout</span><span class="p">,</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">parent_layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">layout_key</span><span class="p">,</span> <span class="p">{}))</span>
 
     <span class="c1"># ensure confort space between tick labels and axis line</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">direc</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;tickprefix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\u2009</span><span class="s2">&quot;</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;tickprefix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\u2004</span><span class="s2">&quot;</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;ticksuffix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\u2009</span><span class="s2">&quot;</span>
 
     <span class="k">if</span> <span class="s2">&quot;anchor&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
@@ -1283,8 +1303,8 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">_mirror_layouts</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_minor_layouts</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">append_mirror_axis</span><span class="p">(</span><span class="n">parent_layout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">append_minor_axis</span><span class="p">(</span><span class="n">parent_layout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">append_mirror_axis</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">append_minor_axis</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
   <span class="k">def</span> <span class="nf">delete_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Delete a layout setting specified by *key*.&quot;&quot;&quot;</span>
@@ -1299,8 +1319,19 @@
 
   <span class="k">def</span> <span class="nf">set_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">mirror_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">minor_val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Set a layout setting specified by *key*.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">mirror_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">mirror_val</span> <span class="o">=</span> <span class="n">val</span>
-    <span class="k">if</span> <span class="n">minor_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">minor_val</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="k">if</span> <span class="n">mirror_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">mirror_val</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="k">if</span> <span class="n">minor_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">minor_val</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="c1"># NOTE: &#39;power&#39; for exponentformat magnifies font by 1.25 times,</span>
+    <span class="c1"># see https://github.com/plotly/plotly.js/blob/4160081dd8b5136ba781039bd2b81588b2b36b4f/src/plots/cartesian/axes.js#L1111.</span>
+    <span class="c1"># Setting &#39;tickfont&#39; restores the original font size.</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;exponentformat&quot;</span> <span class="ow">and</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;power&quot;</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;tickfont&quot;</span><span class="p">][</span><span class="s2">&quot;size&quot;</span><span class="p">]</span> <span class="o">/=</span> <span class="mf">1.25</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;tickformat&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exponentformat&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;power&quot;</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;tickfont&quot;</span><span class="p">][</span><span class="s2">&quot;size&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">1.25</span>
+
     <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
     <span class="k">for</span> <span class="n">mirror_layout</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mirror_layouts</span><span class="p">:</span>
       <span class="n">mirror_layout</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">mirror_val</span>
@@ -1313,15 +1344,15 @@
       <span class="n">key</span> <span class="ow">in</span> <span class="n">layout</span> <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="p">[</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_mirror_layouts</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_minor_layouts</span><span class="p">])</span>
 
-  <span class="k">def</span> <span class="nf">append_mirror_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_layout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">append_mirror_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Append an axis used for drawing mirrored (major) ticks.&quot;&quot;&quot;</span>
     <span class="n">mirror_index</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mirror_layouts</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span>
 
     <span class="n">mirror_layout_key</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">axis</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">direc</span><span class="p">,</span> <span class="n">mirror_index</span><span class="p">)</span>
 
-    <span class="n">mirror_layout</span> <span class="o">=</span> <span class="n">parent_layout</span><span class="p">[</span><span class="n">mirror_layout_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">merged_dict</span><span class="p">(</span>
-      <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">mirror_default_layout</span><span class="p">,</span> <span class="n">parent_layout</span><span class="p">[</span><span class="n">mirror_layout_key</span><span class="p">]</span>
-      <span class="k">if</span> <span class="n">mirror_layout_key</span> <span class="ow">in</span> <span class="n">parent_layout</span> <span class="k">else</span> <span class="p">{})</span>
+    <span class="n">mirror_layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_layout</span><span class="p">[</span><span class="n">mirror_layout_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">merged_dict</span><span class="p">(</span>
+      <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">mirror_default_layout</span><span class="p">,</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">parent_layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mirror_layout_key</span><span class="p">,</span> <span class="p">{}))</span>
 
     <span class="n">mirror_layout</span><span class="p">[</span><span class="s2">&quot;overlaying&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
     <span class="n">mirror_layout</span><span class="p">[</span><span class="s2">&quot;scaleanchor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
@@ -1342,15 +1373,15 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">mirrors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">direc</span><span class="p">,</span> <span class="n">mirror_index</span><span class="p">))</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_mirror_layouts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mirror_layout</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">append_minor_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_layout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">append_minor_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Append an axis used for drawing minor ticks.&quot;&quot;&quot;</span>
     <span class="n">minor_index</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_minor_layouts</span><span class="p">)</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span>
 
     <span class="n">minor_layout_key</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">axis</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">direc</span><span class="p">,</span> <span class="n">minor_index</span><span class="p">)</span>
 
-    <span class="n">minor_layout</span> <span class="o">=</span> <span class="n">parent_layout</span><span class="p">[</span><span class="n">minor_layout_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">merged_dict</span><span class="p">(</span>
-      <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">minor_default_layout</span><span class="p">,</span> <span class="n">parent_layout</span><span class="p">[</span><span class="n">minor_layout_key</span><span class="p">]</span>
-      <span class="k">if</span> <span class="n">minor_layout_key</span> <span class="ow">in</span> <span class="n">parent_layout</span> <span class="k">else</span> <span class="p">{})</span>
+    <span class="n">minor_layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_layout</span><span class="p">[</span><span class="n">minor_layout_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">merged_dict</span><span class="p">(</span>
+      <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">minor_default_layout</span><span class="p">,</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">parent_layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">minor_layout_key</span><span class="p">,</span> <span class="p">{}))</span>
 
     <span class="n">minor_layout</span><span class="p">[</span><span class="s2">&quot;overlaying&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
     <span class="n">minor_layout</span><span class="p">[</span><span class="s2">&quot;scaleanchor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>

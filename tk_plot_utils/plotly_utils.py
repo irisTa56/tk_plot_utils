@@ -44,10 +44,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "size": 18,
     },
     "title": {
-      "font": {
-        "family": "Arial",
-        "size": 20,
-      },
+      "font": {"size": 20},
       "xanchor": "center",
       "xref": "paper",
       "yanchor": "middle",
@@ -1090,18 +1087,12 @@ class MirroredAxisWithMinorTick:
   main_default_layout = {
     **cp.deepcopy(common_default_layout),
     "title": {
-      "font": {
-        "family": "Arial",
-        "size": 20,
-      }
+      "font": {"size": 20}
     },
     "showline": False,
     "showticklabels": True,
     "ticklen": 5,
-    "tickfont": {
-      "family": "Arial",
-      "size": 18,
-    },
+    "tickfont": {"size": 18},
     "hoverformat": ".f",
   }
 

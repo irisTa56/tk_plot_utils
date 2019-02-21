@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                0.7.4
+                0.8.0
               </div>
             
           
@@ -366,7 +366,7 @@ You can specify multiple axes using a regular expression.</dd>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_ticks">
-<code class="descname">set_axis_ticks</code><span class="sig-paren">(</span><em>axis</em>, <em>interval</em>, <em>num_minor=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_ticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_ticks" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_axis_ticks</code><span class="sig-paren">(</span><em>axis</em>, <em>interval</em>, <em>num_minor=5</em>, <em>logtick=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_ticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_ticks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set ticks of the given axis.</p>
 <p>Parameters:</p>
 <dl class="docutils">
@@ -377,12 +377,20 @@ You can specify multiple axes using a regular expression.</dd>
 <dd>Distance between two consecutive major ticks.</dd>
 <dt>num_minor: int</dt>
 <dd>Number of minor ticks per major tick.</dd>
+<dt>logtick: str</dt>
+<dd>Special values for minor ticks of logarithmic axis;
+‘L&lt;f&gt;’, where <code class="docutils literal notranslate"><span class="pre">f</span></code> is a positive number, gives ticks linearly
+spaced in value (but not position). For example <code class="docutils literal notranslate"><span class="pre">tick0</span></code> = 0.1,
+<code class="docutils literal notranslate"><span class="pre">dtick</span></code> = ‘L0.5’ will put ticks at 0.1, 0.6, 1.1, 1.6 etc.
+To show powers of 10 plus small digits between,
+use ‘D1’ (all digits) or ‘D2’ (only 2 and 5).
+<code class="docutils literal notranslate"><span class="pre">tick0</span></code> is ignored for ‘D1’ and ‘D2’.</dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_title">
-<code class="descname">set_axis_title</code><span class="sig-paren">(</span><em>axis</em>, <em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_title" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_axis_title</code><span class="sig-paren">(</span><em>axis</em>, <em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_axis_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_axis_title" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a title string to the given axis.</p>
 <p>Axis title consists of three parts: <em>name</em>, <em>symbol</em> and <em>unit</em>.
 The entire title is something like “name, <em>symbol</em> [unit]”.
@@ -433,20 +441,17 @@ If <code class="docutils literal notranslate"><span class="pre">position</span><
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_title">
-<code class="descname">set_title</code><span class="sig-paren">(</span><em>title</em>, <em>space=30</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_title" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_title</code><span class="sig-paren">(</span><em>title</em>, <em>shift=0</em>, <em>font={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_title" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a title string.</p>
-<p>This method adds an annotation containing the given string
-to <code class="docutils literal notranslate"><span class="pre">self.layout.annotations</span></code>; does not set <code class="docutils literal notranslate"><span class="pre">self.layout.title</span></code>.</p>
 <p>Parameters:</p>
 <dl class="docutils">
 <dt>title: str</dt>
 <dd>Title string.</dd>
-<dt>space: number</dt>
-<dd>Distance in pixel between bottom of the title
-and top of the plot area.</dd>
+<dt>shift: number</dt>
+<dd>Shift (in pixel) from default <em>y</em> position.
+The default position is middle of the top margin area.</dd>
 <dt>font: dict</dt>
-<dd>Dictionary specifying a font setting.
-If None, a font setting is copied from <code class="docutils literal notranslate"><span class="pre">self._layout[&quot;titlefont&quot;]</span></code>.</dd>
+<dd>Dictionary specifying a font setting.</dd>
 </dl>
 </dd></dl>
 
@@ -478,7 +483,7 @@ If None, a font setting is copied from <code class="docutils literal notranslate
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_title">
-<code class="descname">set_x_title</code><span class="sig-paren">(</span><em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_x_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_title" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_x_title</code><span class="sig-paren">(</span><em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_x_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_x_title" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a title string to <em>x</em> axis.</p>
 <p>If this instance has subplots, this method sets a single title
 for <em>x</em> axis. The single title is at the center of dummy titles
@@ -521,7 +526,7 @@ as those of <code class="docutils literal notranslate"><span class="pre">self.se
 
 <dl class="method">
 <dt id="tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_title">
-<code class="descname">set_y_title</code><span class="sig-paren">(</span><em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_y_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_title" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_y_title</code><span class="sig-paren">(</span><em>name=None</em>, <em>symbol=None</em>, <em>unit=None</em>, <em>font={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_utils.html#ExtendedFigureWidget.set_y_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_utils.ExtendedFigureWidget.set_y_title" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a title string to <em>y</em> axis.</p>
 <p>If this instance has subplots, this method sets a single title
 for <em>y</em> axis. The single title is at the middle of dummy titles
@@ -544,7 +549,7 @@ using <code class="docutils literal notranslate"><span class="pre">plotly.offlin
 <p>Parameters:</p>
 <dl class="docutils">
 <dt>data: list or tuple</dt>
-<dd>List of tuple of trace instances (scatter, heatmap, etc.)
+<dd>List or tuple of trace instances (scatter, heatmap, etc.)
 to be plotted. These instances are added to <code class="docutils literal notranslate"><span class="pre">self.data</span></code>
 before calling <code class="docutils literal notranslate"><span class="pre">plotly.offline.iplot()</span></code>.
 If None, there is no addition of data.</dd>
@@ -575,8 +580,8 @@ those of subplots.</dd>
 one <em>x</em> axis. If ‘y’, traces in the same row share one <em>y</em> axis.
 If ‘xy’, both <em>x</em> and <em>y</em> axes are shared.</dd>
 <dt>align: dict</dt>
-<dd><p class="first">Dictionary of which keys are ‘row’ or ‘col’
-and values are ‘each’ or ‘all’.</p>
+<dd><p class="first">Dictionary of which keys are ‘row’ and/or ‘col’
+and values are ‘each’ and/or ‘all’.</p>
 <p>Examples:</p>
 <blockquote class="last">
 <div><ul class="simple">
