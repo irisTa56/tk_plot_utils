@@ -43,14 +43,21 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       "family": "Arial",
       "size": 18,
     },
-    "titlefont": {
-      "family": "Arial",
-      "size": 20,
+    "title": {
+      "font": {
+        "family": "Arial",
+        "size": 20,
+      },
+      "xanchor": "center",
+      "xref": "paper",
+      "yanchor": "middle",
+      "yref": "container",
     },
     "margin": {
       "b": 0,
       "l": 0,
-      "r": 10,
+      "r": 20,
+      "t": 80
     }
   }
 
@@ -249,57 +256,29 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     else:
       raise ValueError("Unrecognized position: {}".format(position))
 
-  def set_title(self, title, space=30, font={}):
+  def set_title(self, title, shift=0, font={}):
     """Set a title string.
-
-    This method adds an annotation containing the given string
-    to ``self.layout.annotations``; does not set ``self.layout.title``.
 
     Parameters:
 
     title: str
       Title string.
 
-    space: number
-      Distance in pixel between bottom of the title
-      and top of the plot area.
+    shift: number
+      Shift (in pixel) from default *y* position.
+      The default position is middle of the top margin area.
 
     font: dict
       Dictionary specifying a font setting.
-      If None, a font setting is copied from ``self._layout["titlefont"]``.
 
     """
-    title_layout = {
-      "font": font if font else cp.deepcopy(self._layout["titlefont"]),
-      "name": "title",
-      "showarrow": False,
-      "text": title,
-      "x": 0.5,
-      "xanchor": "center",
-      "xref": "paper",
-      "y": 1.0,
-      "yanchor": "bottom",
-      "yref": "paper",
-      "yshift": space,
-    }
+    h = self.layout.height
+    t = self.layout.margin.t
 
-    if "annotations" in self.layout:
+    self.layout.title.update(text=title, y=(h-0.5*t+shift)/h)
 
-      found = False
-
-      for annotation in self.layout.annotations:
-        if "name" in annotation and annotation.name == "title":
-          found = True
-          annotation.text = title
-          annotation.yshift = space
-          if font is not None:
-            annotation.font = font
-
-      if not found:
-        self.layout.annotations += (title_layout,)
-
-    else:
-      self.layout.annotations = (title_layout,)
+    if font:
+      self.layout.title.update(font=font)
 
   # Axis Management ----------------------------------------------------
 
@@ -337,12 +316,13 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       self._create_axis(axis)
 
     if name is None and symbol is None and unit is None:
-      self._axes[axis].delete_layout("title")
+      if "text" in self._axes[axis].layout["title"]:
+        del self._axes[axis].layout["title"]["text"]
     else:
       title = self._make_axis_title_string(name, symbol, unit)
-      self._axes[axis].layout["title"] = title
+      self._axes[axis].layout["title"]["text"] = title
       if font:
-        self._axes[axis].layout["titlefont"] = font
+        self._axes[axis].layout["title"]["font"] = font
 
   def set_x_title(self, name=None, symbol=None, unit=None, font={}):
     """Set a title string to *x* axis.
@@ -789,7 +769,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
     # set subplot titles
     if "annotations" in fig.layout:
       for annotation in fig.layout.annotations:
-        annotation["font"] = cp.deepcopy(self._layout["titlefont"])
+        annotation["font"] = self.layout.title.font.to_plotly_json()
       if "annotations" in self.layout:
         self.layout.annotations += fig.layout.annotations
       else:
@@ -987,7 +967,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
   def _set_single_x_title(self, title, font={}):
     """Add a single title of *x* axis to ``self.layout.annotations``."""
     title_layout = {
-      "font": font if font else cp.deepcopy(self._layout["titlefont"]),
+      "font": font if font else self.layout.title.font.to_plotly_json(),
       "name": "x-title",
       "showarrow": False,
       "text": title,
@@ -1019,7 +999,7 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
   def _set_single_y_title(self, title, font={}):
     """Add a single title of *y* axis to ``self.layout.annotations``."""
     title_layout = {
-      "font": font if font else cp.deepcopy(self._layout["titlefont"]),
+      "font": font if font else self.layout.title.font.to_plotly_json(),
       "name": "y-title",
       "showarrow": False,
       "text": title,
@@ -1071,9 +1051,11 @@ class MirroredAxisWithMinorTick:
   # because mirroring ticks breaks auto margin (for labeled axis).
   main_default_layout = {
     **cp.deepcopy(common_default_layout),
-    "titlefont": {
-      "family": "Arial",
-      "size": 20,
+    "title": {
+      "font": {
+        "family": "Arial",
+        "size": 20,
+      }
     },
     "showline": False,
     "showticklabels": True,
@@ -1115,7 +1097,7 @@ class MirroredAxisWithMinorTick:
 
     # ensure confort space between tick labels and axis line
     if self.direc == "y":
-      self.layout["tickprefix"] = "\u2009"
+      self.layout["tickprefix"] = "\u2004"
       self.layout["ticksuffix"] = "\u2009"
 
     if "anchor" not in kwargs:
