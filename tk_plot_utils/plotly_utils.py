@@ -468,6 +468,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
       ``tick0`` is ignored for 'D1' and 'D2'.
 
     """
+    self.delete_axis_layout(axis, "tickmode")
+    self.delete_axis_layout(axis, "nticks")
     self.set_axis_layout(
       axis, "dtick", interval,
       minor_val=interval/num_minor if logtick is None else logtick)
@@ -653,10 +655,13 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           self._extend_axis_range(axis, minimum-padding, maximum+padding)
 
         if not skip_ticks_setting[axis]:
-          self.set_axis_ticks(
-            axis, *self._auto_axis_ticks(
-              self._axes[axis].layout["range"],
-              self._axes[axis].layout.get("type") == "log"))
+          if self._axes[axis].layout.get("type") == "log":
+            self.set_axis_ticks(
+              axis, *self._auto_axis_ticks(
+                self._axes[axis].layout["range"], log=True))
+          else:
+            self.set_axis_layout(axis, "tickmode", "auto")
+            self.set_axis_layout(axis, "nticks", 6, minor_val=34)
 
       self._add_dummy_traces(axis_pair, self.add_scatter)
 
@@ -709,8 +714,8 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
           self._extend_axis_range(axis, minimum, maximum)
 
         if not skip_ticks_setting[axis]:
-          self.set_axis_ticks(
-            axis, *self._auto_axis_ticks(self._axes[axis].layout["range"]))
+          self.set_axis_layout(axis, "tickmode", "auto")
+          self.set_axis_layout(axis, "nticks", 6, minor_val=34)
 
         self._axes[axis].set_layout("ticks", "outside")
         self._axes[axis].set_layout("constrain", "domain")
@@ -886,13 +891,21 @@ class ExtendedFigureWidget(pltgo.FigureWidget):
   def _align_subplots_range(self):
     """Align axis range of subplots."""
     for k, v in self._range_alignment.items():
+
+      axis_types = set(self._axes[axis].layout.get("type") for axis in v)
+      if len(axis_types) == 1:
+        axis_type = list(axis_types)[0]
+      else:
+        raise RuntimeError("Aligned axes must have the same axis type")
+
       minimum = min(self._axes[axis].layout["range"][0] for axis in v)
       maximum = max(self._axes[axis].layout["range"][1] for axis in v)
       self.set_axis_range(k, minimum, maximum)
-      self.set_axis_ticks(
-        k, *self._auto_axis_ticks(
-          self._axes[k].layout["range"],
-          all(self._axes[axis].layout.get("type") == "log" for axis in v)))
+
+      if axis_type == "log":
+        self.set_axis_ticks(
+          k, *self._auto_axis_ticks(
+            self._axes[k].layout["range"], log=True))
 
   def _append_range_alignment(self, master, axis):
     """Append new axis to ``self._range_alignment``."""
@@ -1166,7 +1179,7 @@ class MirroredAxisWithMinorTick:
     if minor_val is None:
       minor_val = val
 
-    # NOTE: 'power' for exponentformat magnifies font by 1.25 times,
+    # NOTE: Setting 'power' for 'exponentformat' magnifies font by 1.25 times,
     # see https://github.com/plotly/plotly.js/blob/4160081dd8b5136ba781039bd2b81588b2b36b4f/src/plots/cartesian/axes.js#L1111.
     # Setting 'tickfont' restores the original font size.
     if key == "exponentformat" and val == "power":

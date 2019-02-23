@@ -53,6 +53,6 @@ This project would not be possible without the following great open-source proje
 
 ## To Do
 
-* Serial number (alphabet) for subplots
-* Auto ticks (using `tickformatstops`?)
+* Serial number (or alphabet) for subplots
+* Auto ticks for logarithmic axis
 * More trace type
