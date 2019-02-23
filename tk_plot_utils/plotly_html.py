@@ -1,5 +1,8 @@
 """Submodule associated with HTML objects containing javascript functions."""
 
+import os
+import pkgutil
+
 import IPython.display as ipd
 
 import plotly.offline as plt
@@ -119,6 +122,64 @@ initial_html += """\
 </script>
 """
 
+# load clipboard.js (used for copying style names from reference HTML)
+style_clipboard = """\
+<style>
+  .btn-clipboard {
+    padding: 0px;
+  }
+</style>
+"""
+
+online_clipboard = """\
+<script>
+  requirejs.config({
+      paths: {
+        clipboard: "https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min"
+      }
+    });
+  if (!window._ClipboardJS)
+  {
+    require(["clipboard"], (clipboard) =>
+      {
+        window._ClipboardJS = clipboard;
+        new window._ClipboardJS(".btn-clipboard");
+      });
+  }
+  else
+  {
+    new window._ClipboardJS(".btn-clipboard");
+  }
+</script>
+"""
+
+offline_clipboard = """\
+<script>
+  if (!window._ClipboardJS)
+  {{
+    define("clipboard", (require, exports, module) =>
+      {{
+        {}
+      }});
+    require(["clipboard"], (ClipboardJS) =>
+      {{
+        window._ClipboardJS = ClipboardJS;
+        new window._ClipboardJS(".btn-clipboard");
+      }});
+  }}
+  else
+  {{
+    new window._ClipboardJS(".btn-clipboard");
+  }}
+</script>
+"""
+
+def _get_clipboardjs():
+  """Return the contents of the minified clipboard.js library
+  as a string."""
+  path = os.path.join("package_data", "clipboard.min.js")
+  return pkgutil.get_data("tk_plot_utils", path).decode("utf-8")
+
 def init_plotly(connected=False):
   """Initialize plotly.js and some javascript functions in the browser.
 
@@ -135,7 +196,10 @@ def init_plotly(connected=False):
 
   """
   plt.init_notebook_mode(connected=connected)
-  ipd.display(ipd.HTML(initial_html))
+  ipd.display(ipd.HTML(
+    initial_html + style_clipboard + (
+      online_clipboard
+      if connected else offline_clipboard.format(_get_clipboardjs()))))
 
 # ----------------------------------------------------------------------
 

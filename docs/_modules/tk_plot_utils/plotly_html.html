@@ -57,7 +57,7 @@
             
             
               <div class="version">
-                0.8.0
+                0.8.1
               </div>
             
           
@@ -148,6 +148,9 @@
             
   <h1>Source code for tk_plot_utils.plotly_html</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Submodule associated with HTML objects containing javascript functions.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pkgutil</span>
 
 <span class="kn">import</span> <span class="nn">IPython.display</span> <span class="k">as</span> <span class="nn">ipd</span>
 
@@ -268,6 +271,64 @@
 <span class="s2">&lt;/script&gt;</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
+<span class="c1"># load clipboard.js (used for copying style names from reference HTML)</span>
+<span class="n">style_clipboard</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;style&gt;</span>
+<span class="s2">  .btn-clipboard {</span>
+<span class="s2">    padding: 0px;</span>
+<span class="s2">  }</span>
+<span class="s2">&lt;/style&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">online_clipboard</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  requirejs.config({</span>
+<span class="s2">      paths: {</span>
+<span class="s2">        clipboard: &quot;https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min&quot;</span>
+<span class="s2">      }</span>
+<span class="s2">    });</span>
+<span class="s2">  if (!window._ClipboardJS)</span>
+<span class="s2">  {</span>
+<span class="s2">    require([&quot;clipboard&quot;], (clipboard) =&gt;</span>
+<span class="s2">      {</span>
+<span class="s2">        window._ClipboardJS = clipboard;</span>
+<span class="s2">        new window._ClipboardJS(&quot;.btn-clipboard&quot;);</span>
+<span class="s2">      });</span>
+<span class="s2">  }</span>
+<span class="s2">  else</span>
+<span class="s2">  {</span>
+<span class="s2">    new window._ClipboardJS(&quot;.btn-clipboard&quot;);</span>
+<span class="s2">  }</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">offline_clipboard</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">  if (!window._ClipboardJS)</span>
+<span class="s2">  {{</span>
+<span class="s2">    define(&quot;clipboard&quot;, (require, exports, module) =&gt;</span>
+<span class="s2">      {{</span>
+<span class="s2">        </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">      }});</span>
+<span class="s2">    require([&quot;clipboard&quot;], (ClipboardJS) =&gt;</span>
+<span class="s2">      {{</span>
+<span class="s2">        window._ClipboardJS = ClipboardJS;</span>
+<span class="s2">        new window._ClipboardJS(&quot;.btn-clipboard&quot;);</span>
+<span class="s2">      }});</span>
+<span class="s2">  }}</span>
+<span class="s2">  else</span>
+<span class="s2">  {{</span>
+<span class="s2">    new window._ClipboardJS(&quot;.btn-clipboard&quot;);</span>
+<span class="s2">  }}</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">_get_clipboardjs</span><span class="p">():</span>
+  <span class="sd">&quot;&quot;&quot;Return the contents of the minified clipboard.js library</span>
+<span class="sd">  as a string.&quot;&quot;&quot;</span>
+  <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;package_data&quot;</span><span class="p">,</span> <span class="s2">&quot;clipboard.min.js&quot;</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;tk_plot_utils&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
 <div class="viewcode-block" id="init_plotly"><a class="viewcode-back" href="../../apis/tk_plot_utils.html#tk_plot_utils.plotly_html.init_plotly">[docs]</a><span class="k">def</span> <span class="nf">init_plotly</span><span class="p">(</span><span class="n">connected</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;Initialize plotly.js and some javascript functions in the browser.</span>
 
@@ -284,7 +345,10 @@
 
 <span class="sd">  &quot;&quot;&quot;</span>
   <span class="n">plt</span><span class="o">.</span><span class="n">init_notebook_mode</span><span class="p">(</span><span class="n">connected</span><span class="o">=</span><span class="n">connected</span><span class="p">)</span>
-  <span class="n">ipd</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ipd</span><span class="o">.</span><span class="n">HTML</span><span class="p">(</span><span class="n">initial_html</span><span class="p">))</span></div>
+  <span class="n">ipd</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">ipd</span><span class="o">.</span><span class="n">HTML</span><span class="p">(</span>
+    <span class="n">initial_html</span> <span class="o">+</span> <span class="n">style_clipboard</span> <span class="o">+</span> <span class="p">(</span>
+      <span class="n">online_clipboard</span>
+      <span class="k">if</span> <span class="n">connected</span> <span class="k">else</span> <span class="n">offline_clipboard</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_get_clipboardjs</span><span class="p">()))))</span></div>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
 

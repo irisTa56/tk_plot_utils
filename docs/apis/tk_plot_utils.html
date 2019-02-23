@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                0.8.0
+                0.8.1
               </div>
             
           
@@ -88,6 +88,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">tk_plot_utils package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.plotly_html">tk_plot_utils.plotly_html module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.plotly_reference">tk_plot_utils.plotly_reference module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.plotly_traces">tk_plot_utils.plotly_traces module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.plotly_utils">tk_plot_utils.plotly_utils module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-tk_plot_utils.utility_functions">tk_plot_utils.utility_functions module</a></li>
@@ -210,9 +211,34 @@ and passed to a javascript function.</dd>
 </dd></dl>
 
 </div>
+<div class="section" id="module-tk_plot_utils.plotly_reference">
+<span id="tk-plot-utils-plotly-reference-module"></span><h3>tk_plot_utils.plotly_reference module<a class="headerlink" href="#module-tk_plot_utils.plotly_reference" title="Permalink to this headline">¶</a></h3>
+<p>Submodule containing functions to show Plotly’s style reference.</p>
+<dl class="function">
+<dt id="tk_plot_utils.plotly_reference.ref_scatter_line_dash">
+<code class="descclassname">tk_plot_utils.plotly_reference.</code><code class="descname">ref_scatter_line_dash</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_reference.html#ref_scatter_line_dash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_reference.ref_scatter_line_dash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show a list of strings valid for values of <code class="docutils literal notranslate"><span class="pre">Scatter.line.dash</span></code>.</p>
+<p>Strings can be copied to clipboard by clicking.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tk_plot_utils.plotly_reference.ref_scatter_marker_symbol">
+<code class="descclassname">tk_plot_utils.plotly_reference.</code><code class="descname">ref_scatter_marker_symbol</code><span class="sig-paren">(</span><em>start=''</em>, <em>end=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_reference.html#ref_scatter_marker_symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_reference.ref_scatter_marker_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show a list of strings valid for values of <code class="docutils literal notranslate"><span class="pre">Scatter.marker.symbol</span></code>.</p>
+<p>Strings can be copied to clipboard by clicking.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>start: str</dt>
+<dd>Show strings only starting by this string .</dd>
+<dt>end: str</dt>
+<dd>Show strings only ending by this string.</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="module-tk_plot_utils.plotly_traces">
 <span id="tk-plot-utils-plotly-traces-module"></span><h3>tk_plot_utils.plotly_traces module<a class="headerlink" href="#module-tk_plot_utils.plotly_traces" title="Permalink to this headline">¶</a></h3>
-<p>Submodule for making Plotly’s trace instances.</p>
+<p>Submodule containing functions to make Plotly’s trace instances.</p>
 <dl class="function">
 <dt id="tk_plot_utils.plotly_traces.make_heatmap">
 <code class="descclassname">tk_plot_utils.plotly_traces.</code><code class="descname">make_heatmap</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_traces.html#make_heatmap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.plotly_traces.make_heatmap" title="Permalink to this definition">¶</a></dt>
@@ -685,6 +711,27 @@ a list of instance(s) is returned.</p>
 </div>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tk_plot_utils.ref_scatter_marker_symbol">
+<code class="descclassname">tk_plot_utils.</code><code class="descname">ref_scatter_marker_symbol</code><span class="sig-paren">(</span><em>start=''</em>, <em>end=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_reference.html#ref_scatter_marker_symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.ref_scatter_marker_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show a list of strings valid for values of <code class="docutils literal notranslate"><span class="pre">Scatter.marker.symbol</span></code>.</p>
+<p>Strings can be copied to clipboard by clicking.</p>
+<p>Parameters:</p>
+<dl class="docutils">
+<dt>start: str</dt>
+<dd>Show strings only starting by this string .</dd>
+<dt>end: str</dt>
+<dd>Show strings only ending by this string.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tk_plot_utils.ref_scatter_line_dash">
+<code class="descclassname">tk_plot_utils.</code><code class="descname">ref_scatter_line_dash</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tk_plot_utils/plotly_reference.html#ref_scatter_line_dash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_plot_utils.ref_scatter_line_dash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show a list of strings valid for values of <code class="docutils literal notranslate"><span class="pre">Scatter.line.dash</span></code>.</p>
+<p>Strings can be copied to clipboard by clicking.</p>
 </dd></dl>
 
 <dl class="function">

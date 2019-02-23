@@ -1,4 +1,4 @@
-"""Submodule for making Plotly's trace instances."""
+"""Submodule containing functions to make Plotly's trace instances."""
 
 import numpy as np
 

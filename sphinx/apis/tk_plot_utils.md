@@ -10,6 +10,14 @@
     :special-members:
 ```
 
+### tk\_plot\_utils.plotly\_reference module
+
+```eval_rst
+.. automodule:: tk_plot_utils.plotly_reference
+    :members:
+    :special-members:
+```
+
 ### tk\_plot\_utils.plotly\_traces module
 
 ```eval_rst

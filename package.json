@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "postinstall": "cp -f node_modules/clipboard/dist/clipboard.min.js tk_plot_utils/package_data/"
+  },
+  "dependencies": {
+    "clipboard": "^2.0.0"
+  }
+}

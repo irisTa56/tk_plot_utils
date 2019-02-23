@@ -57,6 +57,13 @@ Google Chrome is recommended.
 * [Heatmap Subplots](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/subplots_heatmap.ipynb)
 * [Logarithmic-Scale Scatter Plot](https://nbviewer.jupyter.org/github/irisTa56/tk_plot_utils/blob/master/examples/log_scale_scatter.ipynb)
 
+## Acknowledgement
+
+This project would not be possible without the following great open-source projects.
+
+* [plotly/plotly.py](https://github.com/plotly/plotly.py)
+* [zenorocha/clipboard.js](https://github.com/zenorocha/clipboard.js)
+
 ## Indices and tables
 
 * [Index](genindex)
