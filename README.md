@@ -58,3 +58,5 @@ This project would not be possible without the following great open-source proje
 * Auto ticks for logarithmic axis
 * More trace type
 * More style reference
+* Error: associated with single axis title for subplots
+    ![error01](./error_screenshot_01.png)
