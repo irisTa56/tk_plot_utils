@@ -77,19 +77,32 @@ initial_html += """\
 # shift x title to correct position for subplots
 initial_html += """\
 <script>
-  function shift_subplots_xtitle(plot_id, xtitle_index)
+  function shift_subplots_xtitle(plot_id, xtitle_index, itr = 0)
   {
-    let p = document.getElementById(plot_id);
-    let xtitle = [...p.querySelectorAll("g.infolayer > g")]
-      .filter((g) => g.className.baseVal == "annotation")[xtitle_index]
-      .querySelector("g.cursor-pointer");
-    let t = xtitle.getAttribute("transform");
-    let ytrans_old = parseFloat(t.slice(t.indexOf(",")+1, t.indexOf(")")));
-    let h_rect = parseFloat(xtitle.querySelector("rect").getAttribute("height"));
-    let ytrans_new = p.layout.height - h_rect;
-    xtitle.setAttribute("transform",
-      t.slice(0,t.indexOf(",")+1) + ytrans_new.toString() + ")");
-    p.layout.annotations[xtitle_index].yshift = ytrans_old - ytrans_new;
+    try
+    {
+      let p = document.getElementById(plot_id);
+      let xtitle = [...p.querySelectorAll("g.infolayer > g")]
+        .filter((g) => g.className.baseVal == "annotation")[xtitle_index]
+        .querySelector("g.cursor-pointer");
+      let t = xtitle.getAttribute("transform");
+      let ytrans_old = parseFloat(t.slice(t.indexOf(",")+1, t.indexOf(")")));
+      let h_rect = parseFloat(xtitle.querySelector("rect").getAttribute("height"));
+      let ytrans_new = p.layout.height - h_rect;
+      xtitle.setAttribute("transform",
+        t.slice(0,t.indexOf(",")+1) + ytrans_new.toString() + ")");
+      p.layout.annotations[xtitle_index].yshift = ytrans_old - ytrans_new;
+    }
+    catch(e)
+    {
+      if (e instanceof TypeError)
+      {
+        if (itr < 10)
+        {
+          setTimeout(shift_subplots_xtitle, 1000, plot_id, xtitle_index, ++itr);
+        }
+      }
+    }
   };
 </script>
 """
@@ -97,27 +110,40 @@ initial_html += """\
 # shift y title to correct position for subplots
 initial_html += """\
 <script>
-  function shift_subplots_ytitle(plot_id, ytitle_index)
+  function shift_subplots_ytitle(plot_id, ytitle_index, itr = 0)
   {
-    let p = document.getElementById(plot_id);
-    let annotation = [...p.querySelectorAll("g.infolayer > g")]
-      .filter((g) => g.className.baseVal == "annotation")[ytitle_index];
-    let ytitle_parent = annotation.querySelector("g.annotation-text-g");
-    let ytitle = annotation.querySelector("g.cursor-pointer");
-    let r = ytitle_parent.getAttribute("transform");
-    let t = ytitle.getAttribute("transform");
-    let xtrans_old = parseFloat(t.slice(t.indexOf("(")+1, t.indexOf(",")));
-    let rect = ytitle.querySelector("rect");
-    let xcenter = 0.5*parseFloat(rect.getAttribute("width"))
-                  + parseFloat(rect.getAttribute("x"));
-    let ycenter = 0.5*parseFloat(rect.getAttribute("height"))
-                  - parseFloat(rect.getAttribute("y"));
-    let xtrans_new = ycenter - xcenter;
-    ytitle.setAttribute("transform",
-      t.slice(0,t.indexOf("(")+1) + xtrans_new.toString() + t.slice(t.indexOf(",")));
-      ytitle_parent.setAttribute("transform",
-      r.slice(0,r.indexOf(",")+1) + (xtrans_new+xcenter).toString() + r.slice(r.lastIndexOf(",")));
-    p.layout.annotations[ytitle_index].xshift = xtrans_new - xtrans_old;
+    try
+    {
+      let p = document.getElementById(plot_id);
+      let annotation = [...p.querySelectorAll("g.infolayer > g")]
+        .filter((g) => g.className.baseVal == "annotation")[ytitle_index];
+      let ytitle_parent = annotation.querySelector("g.annotation-text-g");
+      let ytitle = annotation.querySelector("g.cursor-pointer");
+      let r = ytitle_parent.getAttribute("transform");
+      let t = ytitle.getAttribute("transform");
+      let xtrans_old = parseFloat(t.slice(t.indexOf("(")+1, t.indexOf(",")));
+      let rect = ytitle.querySelector("rect");
+      let xcenter = 0.5*parseFloat(rect.getAttribute("width"))
+                    + parseFloat(rect.getAttribute("x"));
+      let ycenter = 0.5*parseFloat(rect.getAttribute("height"))
+                    - parseFloat(rect.getAttribute("y"));
+      let xtrans_new = ycenter - xcenter;
+      ytitle.setAttribute("transform",
+        t.slice(0,t.indexOf("(")+1) + xtrans_new.toString() + t.slice(t.indexOf(",")));
+        ytitle_parent.setAttribute("transform",
+        r.slice(0,r.indexOf(",")+1) + (xtrans_new+xcenter).toString() + r.slice(r.lastIndexOf(",")));
+      p.layout.annotations[ytitle_index].xshift = xtrans_new - xtrans_old;
+    }
+    catch(e)
+    {
+      if (e instanceof TypeError)
+      {
+        if (itr < 10)
+        {
+          setTimeout(shift_subplots_ytitle, 1000, plot_id, ytitle_index, ++itr);
+        }
+      }
+    }
   };
 </script>
 """
