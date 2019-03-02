@@ -57,7 +57,7 @@
             
             
               <div class="version">
-                0.8.2
+                0.8.3
               </div>
             
           
@@ -226,19 +226,32 @@
 <span class="c1"># shift x title to correct position for subplots</span>
 <span class="n">initial_html</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
 <span class="s2">&lt;script&gt;</span>
-<span class="s2">  function shift_subplots_xtitle(plot_id, xtitle_index)</span>
+<span class="s2">  function shift_subplots_xtitle(plot_id, xtitle_index, itr = 0)</span>
 <span class="s2">  {</span>
-<span class="s2">    let p = document.getElementById(plot_id);</span>
-<span class="s2">    let xtitle = [...p.querySelectorAll(&quot;g.infolayer &gt; g&quot;)]</span>
-<span class="s2">      .filter((g) =&gt; g.className.baseVal == &quot;annotation&quot;)[xtitle_index]</span>
-<span class="s2">      .querySelector(&quot;g.cursor-pointer&quot;);</span>
-<span class="s2">    let t = xtitle.getAttribute(&quot;transform&quot;);</span>
-<span class="s2">    let ytrans_old = parseFloat(t.slice(t.indexOf(&quot;,&quot;)+1, t.indexOf(&quot;)&quot;)));</span>
-<span class="s2">    let h_rect = parseFloat(xtitle.querySelector(&quot;rect&quot;).getAttribute(&quot;height&quot;));</span>
-<span class="s2">    let ytrans_new = p.layout.height - h_rect;</span>
-<span class="s2">    xtitle.setAttribute(&quot;transform&quot;,</span>
-<span class="s2">      t.slice(0,t.indexOf(&quot;,&quot;)+1) + ytrans_new.toString() + &quot;)&quot;);</span>
-<span class="s2">    p.layout.annotations[xtitle_index].yshift = ytrans_old - ytrans_new;</span>
+<span class="s2">    try</span>
+<span class="s2">    {</span>
+<span class="s2">      let p = document.getElementById(plot_id);</span>
+<span class="s2">      let xtitle = [...p.querySelectorAll(&quot;g.infolayer &gt; g&quot;)]</span>
+<span class="s2">        .filter((g) =&gt; g.className.baseVal == &quot;annotation&quot;)[xtitle_index]</span>
+<span class="s2">        .querySelector(&quot;g.cursor-pointer&quot;);</span>
+<span class="s2">      let t = xtitle.getAttribute(&quot;transform&quot;);</span>
+<span class="s2">      let ytrans_old = parseFloat(t.slice(t.indexOf(&quot;,&quot;)+1, t.indexOf(&quot;)&quot;)));</span>
+<span class="s2">      let h_rect = parseFloat(xtitle.querySelector(&quot;rect&quot;).getAttribute(&quot;height&quot;));</span>
+<span class="s2">      let ytrans_new = p.layout.height - h_rect;</span>
+<span class="s2">      xtitle.setAttribute(&quot;transform&quot;,</span>
+<span class="s2">        t.slice(0,t.indexOf(&quot;,&quot;)+1) + ytrans_new.toString() + &quot;)&quot;);</span>
+<span class="s2">      p.layout.annotations[xtitle_index].yshift = ytrans_old - ytrans_new;</span>
+<span class="s2">    }</span>
+<span class="s2">    catch(e)</span>
+<span class="s2">    {</span>
+<span class="s2">      if (e instanceof TypeError)</span>
+<span class="s2">      {</span>
+<span class="s2">        if (itr &lt; 10)</span>
+<span class="s2">        {</span>
+<span class="s2">          setTimeout(shift_subplots_xtitle, 1000, plot_id, xtitle_index, ++itr);</span>
+<span class="s2">        }</span>
+<span class="s2">      }</span>
+<span class="s2">    }</span>
 <span class="s2">  };</span>
 <span class="s2">&lt;/script&gt;</span>
 <span class="s2">&quot;&quot;&quot;</span>
@@ -246,27 +259,40 @@
 <span class="c1"># shift y title to correct position for subplots</span>
 <span class="n">initial_html</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
 <span class="s2">&lt;script&gt;</span>
-<span class="s2">  function shift_subplots_ytitle(plot_id, ytitle_index)</span>
+<span class="s2">  function shift_subplots_ytitle(plot_id, ytitle_index, itr = 0)</span>
 <span class="s2">  {</span>
-<span class="s2">    let p = document.getElementById(plot_id);</span>
-<span class="s2">    let annotation = [...p.querySelectorAll(&quot;g.infolayer &gt; g&quot;)]</span>
-<span class="s2">      .filter((g) =&gt; g.className.baseVal == &quot;annotation&quot;)[ytitle_index];</span>
-<span class="s2">    let ytitle_parent = annotation.querySelector(&quot;g.annotation-text-g&quot;);</span>
-<span class="s2">    let ytitle = annotation.querySelector(&quot;g.cursor-pointer&quot;);</span>
-<span class="s2">    let r = ytitle_parent.getAttribute(&quot;transform&quot;);</span>
-<span class="s2">    let t = ytitle.getAttribute(&quot;transform&quot;);</span>
-<span class="s2">    let xtrans_old = parseFloat(t.slice(t.indexOf(&quot;(&quot;)+1, t.indexOf(&quot;,&quot;)));</span>
-<span class="s2">    let rect = ytitle.querySelector(&quot;rect&quot;);</span>
-<span class="s2">    let xcenter = 0.5*parseFloat(rect.getAttribute(&quot;width&quot;))</span>
-<span class="s2">                  + parseFloat(rect.getAttribute(&quot;x&quot;));</span>
-<span class="s2">    let ycenter = 0.5*parseFloat(rect.getAttribute(&quot;height&quot;))</span>
-<span class="s2">                  - parseFloat(rect.getAttribute(&quot;y&quot;));</span>
-<span class="s2">    let xtrans_new = ycenter - xcenter;</span>
-<span class="s2">    ytitle.setAttribute(&quot;transform&quot;,</span>
-<span class="s2">      t.slice(0,t.indexOf(&quot;(&quot;)+1) + xtrans_new.toString() + t.slice(t.indexOf(&quot;,&quot;)));</span>
-<span class="s2">      ytitle_parent.setAttribute(&quot;transform&quot;,</span>
-<span class="s2">      r.slice(0,r.indexOf(&quot;,&quot;)+1) + (xtrans_new+xcenter).toString() + r.slice(r.lastIndexOf(&quot;,&quot;)));</span>
-<span class="s2">    p.layout.annotations[ytitle_index].xshift = xtrans_new - xtrans_old;</span>
+<span class="s2">    try</span>
+<span class="s2">    {</span>
+<span class="s2">      let p = document.getElementById(plot_id);</span>
+<span class="s2">      let annotation = [...p.querySelectorAll(&quot;g.infolayer &gt; g&quot;)]</span>
+<span class="s2">        .filter((g) =&gt; g.className.baseVal == &quot;annotation&quot;)[ytitle_index];</span>
+<span class="s2">      let ytitle_parent = annotation.querySelector(&quot;g.annotation-text-g&quot;);</span>
+<span class="s2">      let ytitle = annotation.querySelector(&quot;g.cursor-pointer&quot;);</span>
+<span class="s2">      let r = ytitle_parent.getAttribute(&quot;transform&quot;);</span>
+<span class="s2">      let t = ytitle.getAttribute(&quot;transform&quot;);</span>
+<span class="s2">      let xtrans_old = parseFloat(t.slice(t.indexOf(&quot;(&quot;)+1, t.indexOf(&quot;,&quot;)));</span>
+<span class="s2">      let rect = ytitle.querySelector(&quot;rect&quot;);</span>
+<span class="s2">      let xcenter = 0.5*parseFloat(rect.getAttribute(&quot;width&quot;))</span>
+<span class="s2">                    + parseFloat(rect.getAttribute(&quot;x&quot;));</span>
+<span class="s2">      let ycenter = 0.5*parseFloat(rect.getAttribute(&quot;height&quot;))</span>
+<span class="s2">                    - parseFloat(rect.getAttribute(&quot;y&quot;));</span>
+<span class="s2">      let xtrans_new = ycenter - xcenter;</span>
+<span class="s2">      ytitle.setAttribute(&quot;transform&quot;,</span>
+<span class="s2">        t.slice(0,t.indexOf(&quot;(&quot;)+1) + xtrans_new.toString() + t.slice(t.indexOf(&quot;,&quot;)));</span>
+<span class="s2">        ytitle_parent.setAttribute(&quot;transform&quot;,</span>
+<span class="s2">        r.slice(0,r.indexOf(&quot;,&quot;)+1) + (xtrans_new+xcenter).toString() + r.slice(r.lastIndexOf(&quot;,&quot;)));</span>
+<span class="s2">      p.layout.annotations[ytitle_index].xshift = xtrans_new - xtrans_old;</span>
+<span class="s2">    }</span>
+<span class="s2">    catch(e)</span>
+<span class="s2">    {</span>
+<span class="s2">      if (e instanceof TypeError)</span>
+<span class="s2">      {</span>
+<span class="s2">        if (itr &lt; 10)</span>
+<span class="s2">        {</span>
+<span class="s2">          setTimeout(shift_subplots_ytitle, 1000, plot_id, ytitle_index, ++itr);</span>
+<span class="s2">        }</span>
+<span class="s2">      }</span>
+<span class="s2">    }</span>
 <span class="s2">  };</span>
 <span class="s2">&lt;/script&gt;</span>
 <span class="s2">&quot;&quot;&quot;</span>
